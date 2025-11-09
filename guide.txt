@@ -1,0 +1,11 @@
+#create virture enviroment 
+$ python3 -m venv my_env
+$ source my_env/bin/activate
+#end virture enviroment
+$ deactivate
+
+#run app.py
+$ python3 app.py 
+
+#active domain
+$ cloudflared tunnel run raspi-tunnel
