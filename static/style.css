@@ -1,0 +1,76 @@
+body {
+  font-family: 'Segoe UI', sans-serif;
+  color: #eee;
+  margin: 0;
+  padding: 0;
+}
+
+.login-body, .dashboard-body {
+  background-color: #0f0f0f;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+}
+
+/* === LOGIN PAGE === */
+.card {
+  background: #1e1e1e;
+  padding: 40px;
+  border-radius: 10px;
+  box-shadow: 0 0 20px #000;
+  text-align: center;
+}
+input {
+  background: #222;
+  border: 1px solid #444;
+  color: white;
+  padding: 10px;
+  border-radius: 6px;
+  margin: 5px;
+}
+input[type=submit] {
+  cursor: pointer;
+  background: #1f6feb;
+  border: none;
+  padding: 10px 20px;
+}
+input[type=submit]:hover {
+  background: #58a6ff;
+}
+
+/* === DASHBOARD === */
+h1 { color: #4cc9f0; margin-top: 30px; }
+button {
+  background: #1f6feb;
+  border: none;
+  color: white;
+  padding: 15px 25px;
+  margin: 10px;
+  border-radius: 8px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+button:hover {
+  background: #58a6ff;
+}
+.sensor-box {
+  background: #1e1e1e;
+  padding: 20px;
+  border-radius: 10px;
+  margin-top: 20px;
+  box-shadow: 0 0 10px #000;
+  text-align: center;
+  width: 250px;
+}
+.value {
+  font-size: 2em;
+  color: #00ffcc;
+}
+a {
+  color: #aaa;
+  margin-top: 20px;
+  text-decoration: none;
+}

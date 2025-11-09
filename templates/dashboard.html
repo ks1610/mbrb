@@ -1,0 +1,40 @@
+<!doctype html>
+<html>
+<head>
+  <title>IoT Control Dashboard</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="dashboard-body">
+  <h1>🌙 Raspberry Pi IoT Control</h1>
+
+  <div class="buttons">
+    <button onclick="sendCmd('on')">💡 Light ON</button>
+    <button onclick="sendCmd('off')">💤 Light OFF</button>
+  </div>
+
+  <div class="sensor-box">
+    <h3>🌡️ Temperature & Humidity</h3>
+    <div>Temperature: <span id="temp" class="value">--</span> °C</div>
+    <div>Humidity: <span id="hum" class="value">--</span> %</div>
+  </div>
+
+  <a href="/logout">Logout</a>
+
+  <script>
+    async function sendCmd(cmd) {
+      await fetch('/control/' + cmd);
+    }
+
+    async function updateData() {
+      const res = await fetch('/data');
+      const data = await res.json();
+      document.getElementById('temp').textContent = data.temperature;
+      document.getElementById('hum').textContent = data.humidity;
+    }
+
+    setInterval(updateData, 2000);
+    updateData();
+  </script>
+</body>
+</html>
+
