@@ -214,7 +214,7 @@ async def main():
                 await speak("Chào tạm biệt.")
                 break
                 
-            # 3. Nếu không phải lệnh điều khiển, hỏi Gemini (Chat GPT)
+            # 3. Nếu không phải lệnh điều khiển, hỏi Gemini
             else:
                 try:
                     prompt = f"Trả lời cực ngắn gọn (dưới 20 từ) bằng tiếng Việt: {user_input}"
