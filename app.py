@@ -8,8 +8,8 @@ app.secret_key = "mysecretkey"
 
 # ====== MQTT SETUP ======
 MQTT_BROKER = "broker.hivemq.com"
-TOPIC_CMD = "raspi/esp32/light"
-TOPIC_DATA = "esp32/raspi/data"   # ESP32 will publish temperature/humidity here
+TOPIC_CMD = "raspi/esp32/relay"  # Updated topic (ESP32 should subscribe here)
+TOPIC_DATA = "esp32/raspi/data"  # ESP32 publishes temperature/humidity
 
 # Store latest readings
 sensor_data = {"temperature": "--", "humidity": "--"}
@@ -57,12 +57,19 @@ def logout():
     session.clear()
     return redirect(url_for('login'))
 
-@app.route('/control/<cmd>')
-def control(cmd):
-    if cmd in ["on", "off"]:
-        publish.single(TOPIC_CMD, cmd, hostname=MQTT_BROKER)
-        return f"Command '{cmd}' sent!"
-    return "Invalid command"
+# ====== CONTROL ENDPOINT ======
+@app.route('/control/<relay>/<state>')
+def control(relay, state):
+    if relay not in ["1", "2", "3", "4"] or state not in ["on", "off"]:
+        return "Invalid command"
+    try:
+        message = f"{relay}:{state}"  # Example: "1:on"
+        publish.single(TOPIC_CMD, message, hostname=MQTT_BROKER)
+        print(f"[MQTT] Published -> {message}")
+        return f"Relay {relay} turned {state}"
+    except Exception as e:
+        print("Publish failed:", e)
+        return "MQTT error"
 
 @app.route('/data')
 def get_data():
