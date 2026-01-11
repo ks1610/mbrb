@@ -1,11 +1,14 @@
-#create virture enviroment 
-$ python3 -m venv my_env
+# Active virture enviroment to active project 
 $ source my_env/bin/activate
-#end virture enviroment
-$ deactivate
 
-#run app.py
-$ python3 app.py 
-
-#active domain
+#Control devices via web server 
+#Run webapp.py 
+$ python3 webapp.py 
+#Active domain
 $ cloudflared tunnel run raspi-tunnel
+
+#Comunicate and request the bot control devices 
+$ python3 app.py
+
+#end virture enviroment once you want to stop project
+$ deactivate
