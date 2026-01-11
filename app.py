@@ -14,7 +14,6 @@ os.environ['GPIOZERO_PIN_FACTORY'] = 'rpigpio'
 from gpiozero import OutputDevice
 
 # ====== 1. CẤU HÌNH NGƯỜI DÙNG ======
-# Không cần API KEY nữa!
 MQTT_BROKER = "broker.hivemq.com"
 TOPIC_CMD = "raspi/esp32/relay"
 
