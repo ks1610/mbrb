@@ -6,6 +6,7 @@ $ source my_env/bin/activate
 $ python3 webapp.py 
 #Active domain
 $ cloudflared tunnel run raspi-tunnel
+#Access the published web
 
 #Comunicate and request the bot control devices 
 $ python3 app.py
