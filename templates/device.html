@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Devices - Hanah</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="dashboard-body">
+  <div class="chat-header">
+    <a href="/dashboard">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M19 12H5M12 19l-7-7 7-7"/>
+      </svg>
+      Quay lại
+    </a>
+    <span>Hanah - Partner Robot</span>
+    <div class="user-avatar" style="width: 36px; height: 36px; font-size: 14px;">H</div>
+  </div>
+  <div class="grid-container">
+    <!--div class="card-parent"-->
+      <div class="card">
+        <div class="card-header">
+          <h3>Thiết bị 1</h3>
+          <div class="device-icon">💡</div>
+        </div>
+        <p class="device-status">Đang tắt</p>
+        <div class="button-group">
+          <button class="btn-on" onclick="sendCmd(1, 'on')">BẬT</button>
+          <button class="btn-off" onclick="sendCmd(1, 'off')">TẮT</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <h3>Thiết bị 2</h3>
+          <div class="device-icon">❄️</div>
+        </div>
+        <p class="device-status">Đang tắt</p>
+        <div class="button-group">
+          <button class="btn-on" onclick="sendCmd(2, 'on')">BẬT</button>
+          <button class="btn-off" onclick="sendCmd(2, 'off')">TẮT</button>
+        </div>
+      </div>
+    <!--/div-->
+    <!--div class="card-parent"-->
+      <div class="card">
+        <div class="card-header">
+          <h3>Thiết bị 3</h3>
+          <div class="device-icon">🔌</div>
+        </div>
+        <p class="device-status">Đang tắt</p>
+        <div class="button-group">
+          <button class="btn-on" onclick="sendCmd(3, 'on')">BẬT</button>
+          <button class="btn-off" onclick="sendCmd(3, 'off')">TẮT</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <h3>Thiết bị 4</h3>
+          <div class="device-icon">📺</div>
+        </div>
+        <p class="device-status">Đang tắt</p>
+        <div class="button-group">
+          <button class="btn-on" onclick="sendCmd(4, 'on')">BẬT</button>
+          <button class="btn-off" onclick="sendCmd(4, 'off')">TẮT</button>
+        </div>
+      </div>
+    <!--/div-->
+  </div>
+  <div class="chat-entry">
+    <a href="/hanah" class="chat-btn-large">
+      <span>Thiết Lập Hệ Thống Với Prompt</span>
+    </a>
+  </div>
+  <script>
+    async function sendCmd(relay, state) {
+      const buttonOn = document.querySelector(`.card:nth-child(${relay}) .btn-on`);
+      const buttonOff = document.querySelector(`.card:nth-child(${relay}) .btn-off`);
+      const status = document.querySelector(`.card:nth-child(${relay}) .device-status`);
+      
+      // Visual feedback
+      if (state === 'on') {
+        buttonOn.disabled = true;
+        buttonOff.disabled = false;
+        status.textContent = 'Đang bật';
+        status.style.color = '#10b981';
+      } else {
+        buttonOn.disabled = false;
+        buttonOff.disabled = true;
+        status.textContent = 'Đang tắt';
+        status.style.color = '#94a3b8';
+      }
+      
+      // Show notification
+      showNotification(`Đã ${state === 'on' ? 'bật' : 'tắt'} thiết bị ${relay}`);
+      
+      // Send command
+      await fetch(`/control/${relay}/${state}`);
+    }
+    
+    function showNotification(message) {
+      // Create notification element if it doesn't exist
+      let notification = document.querySelector('.notification');
+      if (!notification) {
+        notification = document.createElement('div');
+        notification.className = 'notification';
+        document.body.appendChild(notification);
+      }
+      
+      notification.innerHTML = `
+        <div class="device-icon" style="width: 24px; height: 24px; font-size: 14px;">✓</div>
+        <span>${message}</span>
+      `;
+      
+      notification.classList.add('show');
+      
+      setTimeout(() => {
+        notification.classList.remove('show');
+      }, 3000);
+    }
+  </script>
+</body>
+</html>

@@ -1,17 +1,75 @@
 <!doctype html>
-<html>
+<html lang="vi">
 <head>
-  <title>Raspberry Pi Login</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Login - Hanah</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body class="login-body">
   <div class="card">
-    <h2>Welcome</h2>
+    <div class="login-logo">
+      <h1>Hanah - Partner Robot</h1>
+    </div>
+    
+    <h2>Welcome Back</h2>
+    
     <form method="post">
-      <input type="password" name="password" placeholder="Enter password" required>
-      <input type="submit" value="Login">
+      <input type="password" name="password" placeholder="Enter your password" required autofocus>
+      <input type="submit" value="Login to Dashboard">
     </form>
-    {% if error %}<p style="color:red;">{{ error }}</p>{% endif %}
+    
+    {% if error %}
+    <p style="color:red;">⚠️ {{ error }}</p>
+    {% endif %}
   </div>
+  
+  <div class="connection-status">
+    <div class="connection-dot"></div>
+    <span>Hanah Connected</span>
+  </div>
+  
+  <script>
+    // Add password strength indicator
+    const passwordInput = document.querySelector('input[type="password"]');
+    const form = document.querySelector('form');
+    
+    passwordInput.addEventListener('input', function() {
+      const strength = calculatePasswordStrength(this.value);
+      updatePasswordStrengthIndicator(strength);
+    });
+    
+    function calculatePasswordStrength(password) {
+      let strength = 0;
+      if (password.length >= 8) strength++;
+      if (/[A-Z]/.test(password)) strength++;
+      if (/[0-9]/.test(password)) strength++;
+      if (/[^A-Za-z0-9]/.test(password)) strength++;
+      return Math.min(strength, 4) / 4; // Normalize to 0-1
+    }
+    
+    function updatePasswordStrengthIndicator(strength) {
+      let indicator = document.querySelector('.password-strength-meter');
+      if (!indicator) {
+        const strengthDiv = document.createElement('div');
+        strengthDiv.className = 'password-strength';
+        strengthDiv.innerHTML = '<div class="password-strength-meter"></div>';
+        passwordInput.parentNode.insertBefore(strengthDiv, passwordInput.nextSibling);
+        indicator = strengthDiv.querySelector('.password-strength-meter');
+      }
+      indicator.style.width = (strength * 100) + '%';
+    }
+    
+    // Form submission animation
+    form.addEventListener('submit', function(e) {
+      const submitBtn = this.querySelector('input[type="submit"]');
+      submitBtn.disabled = true;
+      submitBtn.value = 'Authenticating...';
+      submitBtn.style.opacity = '0.8';
+    });
+  </script>
 </body>
 </html>
