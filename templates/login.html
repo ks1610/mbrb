@@ -48,7 +48,7 @@
       if (/[A-Z]/.test(password)) strength++;
       if (/[0-9]/.test(password)) strength++;
       if (/[^A-Za-z0-9]/.test(password)) strength++;
-      return Math.min(strength, 4) / 4; // Normalize to 0-1
+      return Math.min(strength, 4) / 4; 
     }
     
     function updatePasswordStrengthIndicator(strength) {
