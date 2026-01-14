@@ -25,5 +25,6 @@ Get inspired by a Vietnamese television series, i will create a project of mobil
 * Devices Communication Protocol: MQTT
 
 ## Result:
-11/1/2026: Can communicate as a child and can separate the request of communication and control device.
+* 1/11/2026: Can communicate as a child and can separate the request of communication and control device.
+* 1/14/2026: Can update news and weather in a location
 
