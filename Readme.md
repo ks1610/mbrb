@@ -19,7 +19,6 @@ Image source: https://randomnerdtutorials.com/raspberry-pi-pinout-gpios/
 ## Connection:
 | Raspberry Pi Pin        | Function        | MAX98357A (Speaker) | INMP441 (Microphone) |
 |-------------------------|-----------------|---------------------|----------------------|
-| GPIO 4 (Pin 37)         | Data IN         | SD pin              | (Not connected)      |
 | GPIO 18 (Pin 12)        | Bit Clock       | BCLK Pin            | SCK Pin              |
 | GPIO 19 (Pin 35)        | Word Select     | LRC Pin             | WS Pin               |
 | GPIO 21 (Pin 40)        | Data OUT        | DIN Pin             | (Not connected)      |
