@@ -2,7 +2,7 @@
 
 ## Describe:
 Get inspired by a Vietnamese television series, i will create a project of mobile robot that can comunicate like an AI and control devices in your house 
-![project demo](/iot_app/imgsrc/hanal.png)
+![project demo](imgsrc/hanal.png)
 ## Components:
 * Raspberrypi 4
 * Max9835A Speaker Module
@@ -13,7 +13,7 @@ Get inspired by a Vietnamese television series, i will create a project of mobil
 * LM2596 buck module dc-dc
 * XL4015 buck module dc-dc
 
-![raspberrypi pinout](/iot_app/imgsrc/image.png)
+![raspberrypi pinout](imgsrc/image.png)
 Image source: https://randomnerdtutorials.com/raspberry-pi-pinout-gpios/
 
 ## Connection:
