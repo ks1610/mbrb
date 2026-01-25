@@ -1,90 +1,296 @@
-<!doctype html>
-<html lang="vi">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Hanah</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-  <link rel="stylesheet" href="styles.css">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-</head>
-<body class="dashboard-body">
-  <div class="dashboard-header">
-    <h1 class="dashboard-title">Hanah</h1>
-    <div class="user-info">
-      <div class="user-avatar">H</div>
-      <a href="/logout" class="logout-link">Đăng xuất</a>
-    </div>
-  </div>
-  <div class="grid-container-dashboard">
-    <div class="chat-entry">
-      <a href="/hanah" class="chat-btn-large">
-        <span>Thiết Lập Hệ Thống Với Prompt</span>
-      </a>
-    </div>
-    <div class = "detail-container">
-      <div class = "detail">
-        <div class="device-entry">
-          <a href="/device" class="device-btn-large">
-            <div class ="menu-icon">🎛️</div>
-            <span>Thiết bị kết nối</span>
-          </a>
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Hanah IoT{% endblock %}
+{% block page_title %}Dashboard Overview{% endblock %}
+{% block breadcrumb %}Dashboard{% endblock %}
+
+{% block content %}
+  <div class="dashboard-main-content">
+    <div class="grid-container-dashboard">
+      <div class="dashboard-grid">
+        <div class="grid-card full-width">
+          <div class="card-header">
+            <h3><i class="fas fa-comment-dots"></i> AI Assistant</h3>
+            <span class="card-badge">New</span>
+          </div>
+          <div class="card-content">
+            <a href="/hanah" class="chat-btn-large">
+              <i class="fas fa-robot"></i>
+              <span>Thiết Lập Hệ Thống Với Prompt</span>
+              <i class="fas fa-arrow-right"></i>
+            </a>
+          </div>
         </div>
-        <div class="device-entry">
-          <a href="/device" class="device-btn-large">
-          </a>
+
+        <div class="grid-card">
+          <div class="card-header">
+            <h3><i class="fas fa-plug"></i> Device Status</h3>
+            <span class="card-badge" id="onlineCount">4 online</span>
+          </div>
+          <div class="card-content">
+            <div class="device-grid">
+              <div class="device-card online" data-device="1">
+                <div class="device-icon">
+                  <i class="fas fa-lightbulb"></i>
+                </div>
+                <h4>Living Room Light</h4>
+                <p class="device-status">ON</p>
+                <div class="device-actions">
+                  <button class="btn-toggle" onclick="toggleDevice(1)">
+                    <span class="toggle-text">Turn Off</span>
+                  </button>
+                </div>
+              </div>
+              
+              <div class="device-card offline" data-device="2">
+                <div class="device-icon">
+                  <i class="fas fa-thermometer-half"></i>
+                </div>
+                <h4>Temperature Sensor</h4>
+                <p class="device-status">OFFLINE</p>
+                <div class="device-actions">
+                  <button class="btn-toggle disabled" disabled>
+                    <span class="toggle-text">Connect</span>
+                  </button>
+                </div>
+              </div>
+              
+              <div class="device-card online" data-device="3">
+                <div class="device-icon">
+                  <i class="fas fa-video"></i>
+                </div>
+                <h4>Security Camera</h4>
+                <p class="device-status">RECORDING</p>
+                <div class="device-actions">
+                  <button class="btn-toggle" onclick="toggleDevice(3)">
+                    <span class="toggle-text">Stop</span>
+                  </button>
+                </div>
+              </div>
+              
+              <div class="device-card online" data-device="4">
+                <div class="device-icon">
+                  <i class="fas fa-wind"></i>
+                </div>
+                <h4>Air Conditioner</h4>
+                <p class="device-status">ON</p>
+                <div class="device-actions">
+                  <button class="btn-toggle" onclick="toggleDevice(4)">
+                    <span class="toggle-text">Turn Off</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="device-entry">
-          <a href="/device" class="device-btn-large">
-          </a>
+
+        <div class="grid-card">
+          <div class="card-header">
+            <h3><i class="fas fa-thermometer-half"></i> System Temperature</h3>
+            <span class="card-badge" id="tempStatus">Normal</span>
+          </div>
+          <div class="card-content">
+            <div class="temp1">
+              <div class="gauge-container">
+                <div class="gauge">
+                  <div class="gauge-body">
+                    <div class="gauge-fill" id="gaugeFill"></div>
+                    <div class="gauge-cover"></div>
+                  </div>
+                  <div class="gauge-value" id="gaugeText">--°C</div>
+                  <div class="gauge-label">CPU Temperature</div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="device-entry">
-          <a href="/device" class="device-btn-large">
-          </a>
+
+        <div class="grid-card">
+          <div class="card-header">
+            <h3><i class="fas fa-chart-bar"></i> Quick Stats</h3>
+          </div>
+          <div class="card-content">
+            <div class="stats-grid">
+              <div class="stat-item">
+                <div class="stat-icon energy">
+                  <i class="fas fa-bolt"></i>
+                </div>
+                <div class="stat-info">
+                  <h4 id="val-power">Checking...</h4>
+                  <p>Power Supply</p>
+                </div>
+              </div>
+              <div class="stat-item">
+                <div class="stat-icon uptime">
+                  <i class="fas fa-clock"></i>
+                </div>
+                <div class="stat-info">
+                  <h4 id="val-uptime">--</h4>
+                  <p>System Uptime</p>
+                </div>
+              </div>
+              <div class="stat-item">
+                <div class="stat-icon memory">
+                  <i class="fas fa-memory"></i>
+                </div>
+                <div class="stat-info">
+                  <h4 id="val-memory">--%</h4>
+                  <p>Memory Usage</p>
+                </div>
+              </div>
+              <div class="stat-item">
+                <div class="stat-icon network">
+                  <i class="fas fa-wifi"></i>
+                </div>
+                <div class="stat-info">
+                  <h4 id="val-disk">--%</h4>
+                  <p>Disk Usage</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid-card full-width">
+          <div class="card-header">
+            <h3><i class="fas fa-history"></i> Recent Activity</h3>
+            <span class="card-badge">Live</span>
+          </div>
+          <div class="card-content">
+            <div class="activity-list">
+              <div class="activity-item">
+                <div class="activity-icon success">
+                  <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="activity-content">
+                  <p>System started successfully</p>
+                  <span class="activity-time">Just now</span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-      <div class = "detail-1">
-        <div class="temp1">
-          <div class="gauge-container">
-            <div class="gauge">
-              <div class="gauge-body">
-                <div class="gauge-fill"></div>
-                <div class="gauge-cover"></div>
-              </div>
-              <div class="gauge-value">20°C</div>
-              <div class="gauge-label">Nhiệt độ của Hanah</div>
-            </div>
-          </div>
-        </div>
-        <!-- <div class="temp1">
-          <div class="gauge-container">
-            <div class="gauge">
-              <div class="gauge-body">
-                <div class="gauge-fill"></div>
-                <div class="gauge-cover"></div>
-              </div>
-              <div class="gauge-value">20°C</div>
-              <div class="gauge-label">Temperature</div>
-            </div>
-          </div>
-        </div>
-        <div class="temp1">
-          <div class="gauge-container">
-            <div class="gauge">
-              <div class="gauge-body">
-                <div class="gauge-fill"></div>
-                <div class="gauge-cover"></div>
-              </div>
-              <div class="gauge-value">20°C</div>
-              <div class="gauge-label">Temperature</div>
-            </div>
-          </div>
-        </div> -->
+    </div>
+  </div>
+
+  <script>
+
+    // Temperature update function
+    async function updateSystemStats() {
+      try {
+        const response = await fetch('/api/system-stats');
+        if (!response.ok) return;
         
-      </div>
-    </div>
-  </div>
-</body>
-</html>
+        const data = await response.json();
+        const temp = data.cpu_temp || 0;
+
+        // Update gauge text
+        document.getElementById('gaugeText').innerText = temp + "°C";
+
+        // Update temperature status badge
+        const tempStatus = document.getElementById('tempStatus');
+        if (temp > 70) {
+          tempStatus.textContent = "Hot";
+          tempStatus.style.background = "var(--danger-color)";
+        } else if (temp > 50) {
+          tempStatus.textContent = "Warm";
+          tempStatus.style.background = "var(--warning-color)";
+        } else {
+          tempStatus.textContent = "Normal";
+          tempStatus.style.background = "var(--success-color)";
+        }
+
+        // Calculate gauge rotation (0-85°C range)
+        const minTemp = 0;
+        const maxTemp = 85;
+        let percentage = (temp - minTemp) / (maxTemp - minTemp);
+        if (percentage < 0) percentage = 0;
+        if (percentage > 1) percentage = 1;
+
+        const baseTurn = 0.5;
+        const rangeTurn = 0.5;
+        const rotation = baseTurn + (rangeTurn * percentage);
+        
+        // Apply CSS (Sửa lỗi thiếu backtick ở đây)
+        const fillElement = document.getElementById('gaugeFill');
+        fillElement.style.transform = `rotate(${rotation}turn)`;
+        
+        // Change color based on temperature
+        if (temp > 70) {
+          fillElement.style.background = 'linear-gradient(90deg, #ff9a9e 0%, #ff0000 100%)';
+        } else if (temp > 50) {
+          fillElement.style.background = 'linear-gradient(90deg, #fad961 0%, #f76b1c 100%)';
+        } else {
+          fillElement.style.background = 'linear-gradient(90deg, #4facfe 0%, #00f2fe 100%)';
+        }
+
+        // Cập nhật các chỉ số khác (Quick Stats)
+        if(document.getElementById('val-uptime')) document.getElementById('val-uptime').innerText = data.uptime;
+        if(document.getElementById('val-memory')) document.getElementById('val-memory').innerText = data.memory + '%';
+        if(document.getElementById('val-disk')) document.getElementById('val-disk').innerText = data.disk + '%';
+        if(document.getElementById('val-power')) document.getElementById('val-power').innerText = data.power;
+
+      } catch (error) {
+        console.error("Update error:", error);
+      }
+    }
+
+    // Device toggle function
+    async function toggleDevice(id) {
+      // (Sửa lỗi thiếu backtick ở querySelector)
+      const deviceCard = document.querySelector(`[data-device="${id}"]`);
+      const statusElement = deviceCard.querySelector('.device-status');
+      const toggleBtn = deviceCard.querySelector('.btn-toggle');
+      const toggleText = toggleBtn.querySelector('.toggle-text');
+      
+      // Toggle state
+      const isOn = statusElement.textContent === 'ON';
+      const newState = isOn ? 'off' : 'on';
+      
+      try {
+        // Send command to server (Sửa lỗi thiếu backtick ở URL)
+        await fetch(`/control/${id}/${newState}`);
+        
+        // Update UI
+        if (isOn) {
+          statusElement.textContent = 'OFF';
+          toggleText.textContent = 'Turn On';
+          deviceCard.classList.remove('online');
+          deviceCard.classList.add('offline');
+        } else {
+          statusElement.textContent = 'ON';
+          toggleText.textContent = 'Turn Off';
+          deviceCard.classList.remove('offline');
+          deviceCard.classList.add('online');
+        }
+        
+        // Update online count
+        updateOnlineCount();
+        
+      } catch (error) {
+        console.error("Toggle error:", error);
+      }
+    }
+
+    // Update online device count
+    function updateOnlineCount() {
+      const onlineDevices = document.querySelectorAll('.device-card.online').length;
+      // (Sửa lỗi thiếu backtick)
+      document.getElementById('onlineCount').textContent = `${onlineDevices} online`;
+    }
+
+    // Initialize
+    updateSystemStats();
+    updateOnlineCount();
+    setInterval(updateSystemStats, 5000);
+
+    // Add click handlers to menu items
+    document.querySelectorAll('.menu-item').forEach(item => {
+      item.addEventListener('click', function() {
+        document.querySelectorAll('.menu-item').forEach(i => i.classList.remove('active'));
+        this.classList.add('active');
+      });
+    });
+  </script>
+{% endblock %}

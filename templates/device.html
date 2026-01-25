@@ -1,3 +1,9 @@
+{% extends "base.html" %}
+
+{% block title %}Device Control - Hanah IoT{% endblock %}
+
+{% block content %}
+
 <!doctype html>
 <html lang="vi">
 <head>
@@ -11,16 +17,6 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body class="dashboard-body">
-  <div class="chat-header">
-    <a href="/dashboard">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M19 12H5M12 19l-7-7 7-7"/>
-      </svg>
-      Quay lại
-    </a>
-    <span>Hanah - Partner Robot</span>
-    <div class="user-avatar" style="width: 36px; height: 36px; font-size: 14px;">H</div>
-  </div>
   <div class="grid-container">
       <div class="card">
         <div class="card-header">
@@ -121,3 +117,4 @@
   </script>
 </body>
 </html>
+{% endblock %}

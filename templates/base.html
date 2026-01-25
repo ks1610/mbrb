@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>{% block title %}Hanah IoT{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="{% block body_class %}dashboard-body{% endblock %}">
+  
+  <!-- Include Sidebar -->
+  {% include 'sidebar.html' %}
+  
+  <!-- Main Content -->
+  <div class="main-content" id="mainContent">
+    <header class="top-header">
+      <div class="header-left">
+        <button class="sidebar-toggle" id="sidebarToggle">
+          <i class="fas fa-bars"></i>
+        </button>
+        <div>
+          <h2 class="page-title" id="dynamicPageTitle">{% block page_title %}Dashboard{% endblock %}</h2>
+          <div class="breadcrumb" id="dynamicBreadcrumb">
+            <a href="/dashboard">Home</a> / <span>Page</span>
+          </div>
+        </div>
+      </div>
+      <div class="header-right">
+        <div class="user-profile">
+          <div class="user-avatar">H</div>
+          <div class="user-info">
+            <span class="user-name">Hanah Admin</span>
+            <span class="user-role">Administrator</span>
+          </div>
+          <button class="notification-btn">
+            <i class="fas fa-bell"></i>
+            <span class="notification-badge">3</span>
+          </button>
+        </div>
+      </div>
+    </header>
+    
+    {% block content %}{% endblock %}
+  </div>
+<script>
+    // Sidebar state management
+    let sidebarCollapsed = false;
+    let sidebarToggle, sidebar, mainContent, sidebarClose;
+    
+    // Initialize from localStorage if available
+    if (localStorage.getItem('sidebarCollapsed') === 'true') {
+      sidebarCollapsed = true;
+    }
+    
+    function updateToggleIcon() {
+      if (!sidebarToggle) return; // Safety check
+      const icon = sidebarToggle.querySelector('i');
+      if (sidebarCollapsed) {
+        icon.className = 'fas fa-bars';
+      } else {
+        icon.className = 'fas fa-times';
+      }
+    }
+    
+    function toggleSidebar() {
+      if (!sidebar || !mainContent) return; // Safety check
+      sidebar.classList.toggle('collapsed');
+      mainContent.classList.toggle('full-width');
+      sidebarCollapsed = !sidebarCollapsed;
+      
+      // Save state to localStorage
+      localStorage.setItem('sidebarCollapsed', sidebarCollapsed);
+      
+      // Update toggle icon
+      updateToggleIcon();
+    }
+    
+    // Close sidebar when clicking outside on mobile
+    function closeSidebarOnClickOutside(e) {
+      // Only close on mobile (screen width < 768px)
+      if (!sidebar || !sidebarToggle || !sidebarClose) return;
+      
+      if (window.innerWidth < 768 && 
+          !sidebar.classList.contains('collapsed') && 
+          !sidebar.contains(e.target) && 
+          e.target !== sidebarToggle &&
+          (!sidebarClose || (e.target !== sidebarClose && !sidebarClose.contains(e.target)))) {
+        toggleSidebar();
+      }
+    }
+    
+    // Close sidebar on mobile when window resizes to desktop size
+    function handleResize() {
+      if (window.innerWidth >= 768) {
+        // On desktop, ensure sidebar is open by default
+        if (sidebarCollapsed && sidebar && mainContent) {
+          sidebar.classList.remove('collapsed');
+          mainContent.classList.remove('full-width');
+          sidebarCollapsed = false;
+          updateToggleIcon();
+        }
+        // Hide toggle button on desktop when sidebar is visible
+        if (sidebarToggle) {
+          sidebarToggle.style.display = sidebarCollapsed ? 'flex' : 'none';
+        }
+      } else {
+        // On mobile, ensure toggle button is visible
+        if (sidebarToggle) {
+          sidebarToggle.style.display = 'flex';
+        }
+      }
+    }
+    
+    // Set active navigation item based on current page
+    function setActiveNavItem() {
+      const path = window.location.pathname;
+      const navItems = {
+        '/dashboard': 'nav-dashboard',
+        '/hanah': 'nav-hanah',
+        '/device': 'nav-device',
+        '/control': 'nav-control',
+        '/camera': 'nav-camera',
+        '/settings': 'nav-settings',
+        '/logs': 'nav-logs'
+      };
+      
+      // Remove active class from all items
+      document.querySelectorAll('.menu-item').forEach(item => {
+        item.classList.remove('active');
+      });
+      
+      // Find and activate current page
+      for (const [pathKey, navId] of Object.entries(navItems)) {
+        if (path.includes(pathKey)) {
+          const element = document.getElementById(navId);
+          if (element) element.classList.add('active');
+          break;
+        }
+      }
+    }
+    
+    // Update CPU temperature in sidebar
+    async function updateCPUTemp() {
+      try {
+        const response = await fetch('/api/system-stats');
+        if (response.ok) {
+          const data = await response.json();
+          const temp = data.cpu_temp || '--';
+          const cpuTempElement = document.getElementById('sidebarCpuTemp');
+          if (cpuTempElement) {
+            cpuTempElement.textContent = temp + '°C';
+          }
+        }
+      } catch (error) {
+        console.log('Could not fetch CPU temp:', error);
+      }
+    }
+    
+    // Initialize everything when DOM is loaded
+    document.addEventListener('DOMContentLoaded', () => {
+      // Get DOM elements
+      sidebarToggle = document.getElementById('sidebarToggle');
+      sidebar = document.querySelector('.sidebar');
+      mainContent = document.querySelector('.main-content');
+      sidebarClose = document.getElementById('sidebarClose');
+      
+      // Apply initial state from localStorage
+      if (sidebarCollapsed) {
+        if (sidebar) sidebar.classList.add('collapsed');
+        if (mainContent) mainContent.classList.add('full-width');
+      }
+      
+      // Set up event listeners only if elements exist
+      if (sidebarToggle) {
+        sidebarToggle.addEventListener('click', (e) => {
+          e.stopPropagation(); // Prevent click from bubbling to document
+          toggleSidebar();
+        });
+      }
+      
+      // Close sidebar when clicking the X button inside sidebar
+      if (sidebarClose) {
+        sidebarClose.addEventListener('click', (e) => {
+          e.stopPropagation(); // Prevent event bubbling
+          if (window.innerWidth < 768) {
+            toggleSidebar();
+          }
+        });
+      }
+      
+      if (sidebar) {
+        // Prevent clicks inside sidebar from closing it
+        sidebar.addEventListener('click', (e) => {
+          e.stopPropagation();
+        });
+      }
+      
+      // Add click event listener to document for outside clicks
+      document.addEventListener('click', closeSidebarOnClickOutside);
+      
+      // Listen for window resize
+      window.addEventListener('resize', handleResize);
+      
+      // Close sidebar when pressing Escape key
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && 
+            window.innerWidth < 768 && 
+            sidebar && !sidebar.classList.contains('collapsed')) {
+          toggleSidebar();
+        }
+      });
+      
+      // Update toggle icon after DOM is loaded
+      updateToggleIcon();
+      
+      // Initial resize check
+      handleResize();
+      
+      // Set active nav item
+      setActiveNavItem();
+      
+      // Update CPU temperature
+      updateCPUTemp();
+      
+      // Update temperature every 5 seconds
+      setInterval(updateCPUTemp, 5000);
+      
+      // Add click handlers to sidebar links to auto-close on mobile
+      document.querySelectorAll('.menu-link').forEach(link => {
+        link.addEventListener('click', () => {
+          if (window.innerWidth < 768 && !sidebarCollapsed) {
+            toggleSidebar();
+          }
+        });
+      });
+    });
+  </script>
+  
+  {% block scripts %}{% endblock %}
+</body>
+</html>
