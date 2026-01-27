@@ -455,23 +455,62 @@ async function updateSystemStats() {
         const response = await fetch('/api/system-stats');
         const stats = await response.json();
         
-        if (stats.disk) {
-            document.getElementById('diskUsage').textContent = stats.disk + '%';
-            updateProgressBar('diskUsage', stats.disk);
+        // 1. Cập nhật Disk Usage
+        if (stats.disk_usage !== undefined) {
+            const diskElem = document.getElementById('diskUsage');
+            if(diskElem) {
+                diskElem.textContent = stats.disk_usage + '%';
+                // Nếu bạn có thanh progress bar cho disk (tùy chọn)
+                // updateProgressBar('diskBar', stats.disk_usage); 
+            }
         }
-        if (stats.memory) {
-            document.getElementById('memoryUsage').textContent = stats.memory + '%';
-            updateProgressBar('memoryUsage', stats.memory);
+
+        // 2. Cập nhật Memory Usage
+        if (stats.memory_usage !== undefined) {
+            const memElem = document.getElementById('memoryUsage');
+            if(memElem) {
+                memElem.textContent = stats.memory_usage + '%';
+                // Gọi hàm đổi màu chữ dựa trên %
+                updateColorByValue(memElem, stats.memory_usage);
+            }
         }
-        if (stats.cpu_temp) {
-            document.getElementById('cpuTemp').textContent = stats.cpu_temp + '°C';
-            updateTemperatureColor('cpuTemp', stats.cpu_temp);
+
+        // 3. Cập nhật CPU Temp
+        if (stats.cpu_temp !== undefined) {
+            const tempElem = document.getElementById('cpuTemp');
+            if(tempElem) {
+                tempElem.textContent = stats.cpu_temp + '°C';
+                updateColorByValue(tempElem, stats.cpu_temp, 60, 75); // Ngưỡng: 60 (vàng), 75 (đỏ)
+            }
         }
-        if (stats.power) {
-            document.getElementById('powerDraw').textContent = stats.power;
+
+        // 4. Cập nhật Power Draw (Trạng thái nguồn)
+        if (stats.power_draw) {
+            const powerElem = document.getElementById('powerDraw');
+            if(powerElem) {
+                powerElem.textContent = stats.power_draw;
+                // Đổi màu nếu nguồn yếu
+                if (stats.power_draw !== "Ổn Định" && stats.power_draw !== "Normal") {
+                    powerElem.style.color = "var(--danger-color)";
+                } else {
+                    powerElem.style.color = "var(--success-color)";
+                }
+            }
         }
+
     } catch (error) {
         console.error('Failed to update system stats:', error);
+    }
+}
+
+// Hàm phụ trợ để đổi màu chữ (Thêm vào nếu chưa có)
+function updateColorByValue(element, value, warnThreshold=60, dangerThreshold=80) {
+    if (value > dangerThreshold) {
+        element.style.color = 'var(--danger-color)';
+    } else if (value > warnThreshold) {
+        element.style.color = 'var(--warning-color)';
+    } else {
+        element.style.color = 'var(--text-primary)'; // Hoặc màu mặc định
     }
 }
 
