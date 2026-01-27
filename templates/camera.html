@@ -1,38 +1,25 @@
 {% extends "base.html" %}
 
-{% block title %}Camera - Hanah IoT{% endblock %}
-{% block page_title %}Robot Camera Control{% endblock %}
+{% block title %}Camera & Control - Hanah IoT{% endblock %}
+{% block page_title %}Live Camera & Robot Control{% endblock %}
 {% block breadcrumb %}Camera{% endblock %}
 
 {% block content %}
 <div class="camera-container">
-  <!-- Camera Live Feed Section -->
   <div class="camera-grid">
-    <!-- Main Video Feed -->
+    
     <div class="camera-card main-feed">
       <div class="card-header">
         <div class="camera-header-left">
           <i class="fas fa-robot camera-icon"></i>
           <div>
-            <h3>Robot Camera Live Feed</h3>
+            <h3>Live Vision Feed</h3>
             <div class="camera-status">
               <span class="status-indicator online">
                 <div class="status-dot"></div>
-                <span class="stream-text">Streaming Live</span>
+                <span class="stream-text">Online</span>
               </span>
-              <span class="camera-id">CAM-001 • Robot Vision</span>
-            </div>
-          </div>
-        </div>
-        <div class="camera-header-right">
-          <div class="connection-stats">
-            <div class="stat">
-              <i class="fas fa-signal"></i>
-              <span>28 FPS</span>
-            </div>
-            <div class="stat">
-              <i class="fas fa-clock"></i>
-              <span id="uptime">00:15:32</span>
+              <span class="camera-id">CAM-01 • Face Tracking Ready</span>
             </div>
           </div>
         </div>
@@ -40,622 +27,238 @@
       
       <div class="video-container">
         <div class="video-wrapper">
-          <img src="{{ url_for('video_feed') }}" alt="Robot Camera Stream" class="live-feed" id="cameraFeed">
+          <img src="{{ url_for('video_feed') }}" alt="Robot Camera Stream" class="live-feed" id="cameraFeed" style="width: 100%; border-radius: 8px;">
           <div class="video-overlay">
-            <div class="recording-indicator">
-              <div class="recording-dot"></div>
-              <span>REC</span>
-            </div>
-            <div class="timestamp" id="videoTimestamp">15:32:45</div>
-          </div>
-          <!-- Grid overlay for robot positioning -->
-          <div class="grid-overlay">
-            <div class="grid-line vertical"></div>
-            <div class="grid-line horizontal"></div>
-            <div class="center-marker">
-              <div class="center-dot"></div>
+            <div class="recording-indicator" id="recIndicator" style="display: none;">
+              <div class="recording-dot"></div><span>REC</span>
             </div>
           </div>
         </div>
       </div>
       
       <div class="video-controls">
-        <button class="control-btn primary" onclick="location.reload()">
-          <i class="fas fa-sync-alt"></i>
-          <span>Refresh Stream</span>
+        <button class="control-btn" id="btnTracking" onclick="toggleTracking()">
+          <i class="fas fa-crosshairs"></i>
+          <span>AI Tracking: OFF</span>
         </button>
-        <button class="control-btn" id="recordBtn">
-          <i class="fas fa-circle"></i>
-          <span>Start Recording</span>
+        <button class="control-btn" onclick="location.reload()">
+          <i class="fas fa-sync-alt"></i> Refresh
         </button>
-        <button class="control-btn" id="snapshotBtn">
-          <i class="fas fa-camera"></i>
-          <span>Take Snapshot</span>
-        </button>
-        <div class="quality-selector">
-          <i class="fas fa-hd"></i>
-          <select id="qualitySelect">
-            <option value="high">High Quality</option>
-            <option value="medium" selected>Medium</option>
-            <option value="low">Low</option>
-          </select>
-        </div>
       </div>
     </div>
 
-    <!-- Robot Control Panel -->
     <div class="camera-card control-panel">
       <div class="card-header">
-        <h3><i class="fas fa-gamepad"></i> Robot Controls</h3>
-        <span class="card-badge">Active</span>
+        <h3><i class="fas fa-gamepad"></i> Manual Control</h3>
       </div>
       
       <div class="control-content">
-        <!-- Movement Controls -->
-        <div class="movement-section">
-          <h4>Movement Controls</h4>
-          <div class="dpad-container">
-            <!-- Up Button -->
-            <button class="dpad-btn up" id="moveUp" onmousedown="startMovement('forward')" onmouseup="stopMovement()" ontouchstart="startMovement('forward')" ontouchend="stopMovement()">
-              <i class="fas fa-arrow-up"></i>
-              <span class="btn-label">Forward</span>
-            </button>
-            
-            <!-- Middle Row -->
-            <div class="dpad-row">
-              <button class="dpad-btn left" id="moveLeft" onmousedown="startMovement('left')" onmouseup="stopMovement()" ontouchstart="startMovement('left')" ontouchend="stopMovement()">
-                <i class="fas fa-arrow-left"></i>
-                <span class="btn-label">Left</span>
-              </button>
-              
-              <div class="dpad-center">
-                <div class="center-circle">
-                  <i class="fas fa-crosshairs"></i>
-                </div>
-              </div>
-              
-              <button class="dpad-btn right" id="moveRight" onmousedown="startMovement('right')" onmouseup="stopMovement()" ontouchstart="startMovement('right')" ontouchend="stopMovement()">
-                <i class="fas fa-arrow-right"></i>
-                <span class="btn-label">Right</span>
-              </button>
-            </div>
-            
-            <!-- Down Button -->
-            <button class="dpad-btn down" id="moveDown" onmousedown="startMovement('backward')" onmouseup="stopMovement()" ontouchstart="startMovement('backward')" ontouchend="stopMovement()">
-              <i class="fas fa-arrow-down"></i>
-              <span class="btn-label">Backward</span>
-            </button>
-          </div>
-          
-          <!-- Speed Control -->
-          <div class="speed-control">
-            <h4>Speed Control</h4>
-            <div class="speed-slider">
-              <span class="speed-label">Slow</span>
-              <input type="range" id="speedSlider" min="1" max="10" value="5" class="slider">
-              <span class="speed-label">Fast</span>
-            </div>
-            <div class="speed-value">
-              Current Speed: <span id="speedValue">5</span>/10
-            </div>
-          </div>
-        </div>
+        <div class="dpad-container" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; max-width: 220px; margin: 0 auto;">
+           <div></div>
+           <button class="dpad-btn" id="btn-fw"
+                   onmousedown="startMove('FW')" onmouseup="stopMove()" 
+                   ontouchstart="startMove('FW')" ontouchend="stopMove()">
+             <i class="fas fa-arrow-up"></i>
+           </button>
+           <div></div>
 
-        <!-- Camera Controls -->
-        <div class="camera-section">
-          <h4>Camera Controls</h4>
-          <div class="camera-control-grid">
-            <button class="camera-btn" id="tiltUp">
-              <i class="fas fa-angle-up"></i>
-              <span>Tilt Up</span>
-            </button>
-            <button class="camera-btn" id="tiltDown">
-              <i class="fas fa-angle-down"></i>
-              <span>Tilt Down</span>
-            </button>
-            <button class="camera-btn" id="panLeft">
-              <i class="fas fa-angle-left"></i>
-              <span>Pan Left</span>
-            </button>
-            <button class="camera-btn" id="panRight">
-              <i class="fas fa-angle-right"></i>
-              <span>Pan Right</span>
-            </button>
-            <button class="camera-btn wide" id="zoomIn">
-              <i class="fas fa-search-plus"></i>
-              <span>Zoom In</span>
-            </button>
-            <button class="camera-btn wide" id="zoomOut">
-              <i class="fas fa-search-minus"></i>
-              <span>Zoom Out</span>
-            </button>
-          </div>
-        </div>
+           <button class="dpad-btn" id="btn-tl"
+                   onmousedown="startMove('TL')" onmouseup="stopMove()" 
+                   ontouchstart="startMove('TL')" ontouchend="stopMove()">
+             <i class="fas fa-arrow-left"></i>
+           </button>
+           
+           <button class="dpad-btn stop-btn" id="btn-stop" onclick="stopMove()" style="background: #ef4444;">
+             <i class="fas fa-stop"></i>
+           </button>
+           
+           <button class="dpad-btn" id="btn-tr"
+                   onmousedown="startMove('TR')" onmouseup="stopMove()" 
+                   ontouchstart="startMove('TR')" ontouchend="stopMove()">
+             <i class="fas fa-arrow-right"></i>
+           </button>
 
-        <!-- Preset Positions -->
-        <div class="preset-section">
-          <h4>Preset Positions</h4>
-          <div class="preset-buttons">
-            <button class="preset-btn" data-preset="home">
-              <i class="fas fa-home"></i>
-              <span>Home</span>
-            </button>
-            <button class="preset-btn" data-preset="patrol">
-              <i class="fas fa-shield-alt"></i>
-              <span>Patrol</span>
-            </button>
-            <button class="preset-btn" data-preset="inspection">
-              <i class="fas fa-search"></i>
-              <span>Inspection</span>
-            </button>
-            <button class="preset-btn" data-preset="custom1">
-              <i class="fas fa-star"></i>
-              <span>Preset 1</span>
-            </button>
-          </div>
+           <div></div>
+           <button class="dpad-btn" id="btn-bw"
+                   onmousedown="startMove('BW')" onmouseup="stopMove()" 
+                   ontouchstart="startMove('BW')" ontouchend="stopMove()">
+             <i class="fas fa-arrow-down"></i>
+           </button>
+           <div></div>
         </div>
-      </div>
-      
-      <div class="status-footer">
-        <button class="emergency-stop" id="emergencyStop">
-          <i class="fas fa-stop-circle"></i>
-          <span>Emergency Stop</span>
-        </button>
+        
+        <div style="margin-top: 20px; padding: 0 10px;">
+            <label style="color: #cbd5e1; font-size: 0.9rem;">Speed: <span id="speedVal">150</span></label>
+            <input type="range" id="speedRange" min="0" max="255" value="150" style="width: 100%; margin-top: 5px;" oninput="document.getElementById('speedVal').innerText = this.value">
+        </div>
+        
+        <div style="margin-top: 15px; text-align: center; color: #64748b; font-size: 0.8rem;">
+            Use <b>Arrow Keys</b> or <b>W A S D</b> to move
+        </div>
       </div>
     </div>
 
-    <!-- Stats Panel -->
-    <div class="camera-card stats-panel">
-      <div class="card-header">
-        <h3><i class="fas fa-chart-line"></i> System Stats</h3>
-      </div>
-      <div class="stats-content">
-        <div class="stat-item">
-          <div class="stat-icon">
-            <i class="fas fa-microchip"></i>
-          </div>
-          <div class="stat-info">
-            <h4 id="cpuTemp">--°C</h4>
-            <p>CPU Temperature</p>
-          </div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-icon">
-            <i class="fas fa-memory"></i>
-          </div>
-          <div class="stat-info">
-            <h4 id="memoryUsage">--%</h4>
-            <p>Memory Usage</p>
-          </div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-icon">
-            <i class="fas fa-hdd"></i>
-          </div>
-          <div class="stat-info">
-            <h4 id="val-uptime">--</h4>
-            <p>System Uptime</p>
-          </div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-icon">
-            <i class="fas fa-network-wired"></i>
-          </div>
-          <div class="stat-info">
-              <h4 id="val-network">-- KB/s</h4>
-              <p>Network Speed</p>
-          </div>
-        </div>
-      </div>
-      <div class="recent-activity">
-        <h4>Recent Commands</h4>
-        <div class="activity-list" id="commandLog">
-          <div class="activity-item">
-            <i class="fas fa-arrow-up activity-icon"></i>
-            <div class="activity-content">
-              <p>Move Forward</p>
-              <span class="activity-time">Just now</span>
-            </div>
-          </div>
-          <div class="activity-item">
-            <i class="fas fa-camera activity-icon"></i>
-            <div class="activity-content">
-              <p>Snapshot Taken</p>
-              <span class="activity-time">2 min ago</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
   </div>
 </div>
+
 <script>
-// Robot Movement Control
-let movementInterval = null;
-let currentMovement = null;
-let currentSpeed = 5;
+  // --- 1. LOGIC GỬI LỆNH (GIỮ NGUYÊN) ---
+  let moveInterval = null;
+  
+  function startMove(cmd) {
+      if (moveInterval) clearInterval(moveInterval); 
+      
+      const speed = document.getElementById('speedRange').value;
+      const duration = 250; 
+      
+      sendCommand(cmd, speed, duration);
+      moveInterval = setInterval(() => {
+          sendCommand(cmd, speed, duration);
+      }, 200);
+  }
 
-function startMovement(direction) {
-    if (movementInterval) clearInterval(movementInterval);
-    
-    currentMovement = direction;
-    const speed = document.getElementById('speedSlider').value;
-    
-    // Send movement command to server
-    sendMovementCommand(direction, speed);
-    
-    // Log the command
-    logCommand(`Move ${direction.charAt(0).toUpperCase() + direction.slice(1)}`);
-    
-    // Update UI feedback
-    highlightDirectionButton(direction);
-}
+  function stopMove() {
+      if (moveInterval) {
+          clearInterval(moveInterval);
+          moveInterval = null;
+      }
+      sendCommand('STOP', 0, 0);
+  }
 
-function stopMovement() {
-    if (movementInterval) {
-        clearInterval(movementInterval);
-        movementInterval = null;
-    }
-    
-    // Send stop command
-    sendMovementCommand('stop', 0);
-    
-    // Remove highlight
-    removeDirectionHighlight();
-    
-    currentMovement = null;
-}
+  async function sendCommand(cmd, speed, duration) {
+      try {
+          await fetch('/api/move', {
+              method: 'POST',
+              headers: {'Content-Type': 'application/json'},
+              body: JSON.stringify({cmd, speed, duration})
+          });
+      } catch (e) {
+          console.error("Lỗi gửi lệnh:", e);
+      }
+  }
 
-function sendMovementCommand(direction, speed) {
-    // Send AJAX request to server
-    fetch('/api/robot/move', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            direction: direction,
-            speed: parseInt(speed)
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.status !== 'success') {
-            console.error('Movement command failed:', data.message);
-        }
-    })
-    .catch(error => {
-        console.error('Error sending movement command:', error);
-    });
-}
+  // --- 2. LOGIC BÀN PHÍM (MỚI) ---
+  let activeKey = null; // Biến lưu phím đang được giữ để chống lặp
 
-function highlightDirectionButton(direction) {
-    // Remove all highlights first
-    ['up', 'down', 'left', 'right'].forEach(dir => {
-        const btn = document.getElementById(`move${dir.charAt(0).toUpperCase() + dir.slice(1)}`);
-        if (btn) btn.classList.remove('active');
-    });
-    
-    // Add highlight to current direction
-    const btn = document.getElementById(`move${direction.charAt(0).toUpperCase() + direction.slice(1)}`);
-    if (btn) btn.classList.add('active');
-}
+  document.addEventListener('keydown', function(event) {
+      // Nếu đang giữ phím thì bỏ qua (chống lặp event của hệ điều hành)
+      if (activeKey === event.code) return; 
+      
+      let cmd = null;
+      let btnId = null;
 
-function removeDirectionHighlight() {
-    ['up', 'down', 'left', 'right'].forEach(dir => {
-        const btn = document.getElementById(`move${dir.charAt(0).toUpperCase() + dir.slice(1)}`);
-        if (btn) btn.classList.remove('active');
-    });
-}
+      switch(event.code) {
+          case 'ArrowUp':
+          case 'KeyW':
+              cmd = 'FW'; btnId = 'btn-fw'; break;
+          case 'ArrowDown':
+          case 'KeyS':
+              cmd = 'BW'; btnId = 'btn-bw'; break;
+          case 'ArrowLeft':
+          case 'KeyA':
+              cmd = 'TL'; btnId = 'btn-tl'; break;
+          case 'ArrowRight':
+          case 'KeyD':
+              cmd = 'TR'; btnId = 'btn-tr'; break;
+          case 'Space':
+              stopMove(); // Phím Space để phanh gấp
+              document.getElementById('btn-stop').classList.add('active');
+              return; 
+      }
 
-// Speed Control
-document.getElementById('speedSlider').addEventListener('input', function(e) {
-    const speed = e.target.value;
-    document.getElementById('speedValue').textContent = speed;
-    currentSpeed = speed;
-    
-    // If currently moving, update speed
-    if (currentMovement) {
-        sendMovementCommand(currentMovement, speed);
-    }
-});
+      if (cmd) {
+          // Ngăn cuộn trang khi bấm nút mũi tên
+          event.preventDefault(); 
+          
+          activeKey = event.code; // Đánh dấu phím này đang được nhấn
+          
+          // Thêm hiệu ứng nút sáng lên trên màn hình
+          document.getElementById(btnId).classList.add('active');
+          
+          // Bắt đầu di chuyển
+          startMove(cmd);
+      }
+  });
 
-// Camera Controls
-document.querySelectorAll('.camera-btn').forEach(btn => {
-    btn.addEventListener('click', function() {
-        const action = this.id;
-        sendCameraCommand(action);
-        logCommand(`Camera: ${this.querySelector('span').textContent}`);
-    });
-});
+  document.addEventListener('keyup', function(event) {
+      // Chỉ dừng nếu nhả đúng cái phím đang dùng để di chuyển
+      if (activeKey === event.code) {
+          stopMove();
+          
+          // Xóa hiệu ứng sáng nút
+          document.querySelectorAll('.dpad-btn').forEach(btn => btn.classList.remove('active'));
+          
+          activeKey = null; // Reset
+      }
+      
+      if (event.code === 'Space') {
+          document.getElementById('btn-stop').classList.remove('active');
+      }
+  });
 
-function sendCameraCommand(action) {
-    fetch('/api/robot/camera', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            action: action
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.status !== 'success') {
-            console.error('Camera command failed:', data.message);
-        }
-    })
-    .catch(error => {
-        console.error('Error sending camera command:', error);
-    });
-}
-
-// Preset Positions
-document.querySelectorAll('.preset-btn').forEach(btn => {
-    btn.addEventListener('click', function() {
-        const preset = this.dataset.preset;
-        sendPresetCommand(preset);
-        logCommand(`Preset: ${this.querySelector('span').textContent}`);
-    });
-});
-
-function sendPresetCommand(preset) {
-    fetch('/api/robot/preset', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            preset: preset
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.status === 'success') {
-            showNotification(`Preset "${preset}" activated`, 'success');
-        }
-    })
-    .catch(error => {
-        console.error('Error sending preset command:', error);
-    });
-}
-
-// Emergency Stop
-document.getElementById('emergencyStop').addEventListener('click', function() {
-    if (confirm('Are you sure you want to emergency stop the robot?')) {
-        sendEmergencyStop();
-        logCommand('Emergency Stop');
-        showNotification('Robot emergency stopped', 'warning');
-    }
-});
-
-function sendEmergencyStop() {
-    fetch('/api/robot/emergency', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            emergency: true
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        stopMovement();
-        removeDirectionHighlight();
-    })
-    .catch(error => {
-        console.error('Error sending emergency stop:', error);
-    });
-}
-
-// Recording Control
-let isRecording = false;
-document.getElementById('recordBtn').addEventListener('click', function() {
-    isRecording = !isRecording;
-    
-    if (isRecording) {
-        this.innerHTML = '<i class="fas fa-square"></i><span>Stop Recording</span>';
-        this.classList.add('primary');
-        logCommand('Started Recording');
-    } else {
-        this.innerHTML = '<i class="fas fa-circle"></i><span>Start Recording</span>';
-        this.classList.remove('primary');
-        logCommand('Stopped Recording');
-    }
-    
-    // Send recording command to server
-    fetch('/api/robot/record', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            record: isRecording
-        })
-    });
-});
-
-// Snapshot
-document.getElementById('snapshotBtn').addEventListener('click', function() {
-    fetch('/api/robot/snapshot', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.status === 'success') {
-            logCommand('Snapshot Taken');
-            showNotification('Snapshot saved successfully', 'success');
-        }
-    })
-    .catch(error => {
-        console.error('Error taking snapshot:', error);
-    });
-});
-
-// Quality Selector
-document.getElementById('qualitySelect').addEventListener('change', function(e) {
-    const quality = e.target.value;
-    fetch('/api/robot/quality', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            quality: quality
-        })
-    });
-    logCommand(`Quality changed to ${quality}`);
-});
-
-// Command Logging
-function logCommand(command) {
-    const logContainer = document.getElementById('commandLog');
-    const timestamp = new Date().toLocaleTimeString();
-    
-    const activityItem = document.createElement('div');
-    activityItem.className = 'activity-item';
-    
-    // Get appropriate icon
-    let icon = 'fa-terminal';
-    if (command.includes('Move')) icon = 'fa-arrow-up';
-    if (command.includes('Camera')) icon = 'fa-camera';
-    if (command.includes('Preset')) icon = 'fa-star';
-    if (command.includes('Recording')) icon = 'fa-circle';
-    if (command.includes('Snapshot')) icon = 'fa-camera';
-    if (command.includes('Emergency')) icon = 'fa-stop-circle';
-    if (command.includes('Quality')) icon = 'fa-hd';
-    
-    activityItem.innerHTML = `
-        <i class="fas ${icon} activity-icon"></i>
-        <div class="activity-content">
-            <p>${command}</p>
-            <span class="activity-time">${timestamp}</span>
-        </div>
-    `;
-    
-    // Add to top
-    logContainer.insertBefore(activityItem, logContainer.firstChild);
-    
-    // Keep only last 5 items
-    while (logContainer.children.length > 5) {
-        logContainer.removeChild(logContainer.lastChild);
-    }
-}
-
-// Update system stats
-function updateSystemStats() {
-    fetch('/api/system-stats')
-        .then(response => response.json())
-        .then(data => {
-            if (data.cpu_temp) {
-                document.getElementById('cpuTemp').textContent = data.cpu_temp + '°C';
-            }
-            if (data.memory) {
-                document.getElementById('memoryUsage').textContent = data.memory + '%';
-            }
-            if (data.storage) {
-                document.getElementById('val-storage').innerText = data.storage + ' GB';
-            }
-            if (data.uptime) {
-                document.getElementById('val-uptime').innerText = data.uptime;
-            }
-            if (data.net_speed) {
-                document.getElementById('val-network').innerText = data.net_speed;
-            }
-        })
-        .catch(error => console.error('Error fetching stats:', error));
-}
-
-// Update timestamp
-function updateTimestamp() {
-    const now = new Date();
-    const timeString = now.toLocaleTimeString('en-US', { hour12: false });
-    document.getElementById('videoTimestamp').textContent = timeString;
-    document.getElementById('uptime').textContent = timeString;
-}
-
-// Initialize
-document.addEventListener('DOMContentLoaded', function() {
-    updateSystemStats();
-    updateTimestamp();
-    
-    // Update timestamp every second
-    setInterval(updateTimestamp, 1000);
-    
-    // Update stats every 5 seconds
-    setInterval(updateSystemStats, 5000);
-    
-    // Keyboard controls
-    document.addEventListener('keydown', function(e) {
-        switch(e.key) {
-            case 'ArrowUp':
-            case 'w':
-            case 'W':
-                startMovement('forward');
-                break;
-            case 'ArrowDown':
-            case 's':
-            case 'S':
-                startMovement('backward');
-                break;
-            case 'ArrowLeft':
-            case 'a':
-            case 'A':
-                startMovement('left');
-                break;
-            case 'ArrowRight':
-            case 'd':
-            case 'D':
-                startMovement('right');
-                break;
-            case ' ':
-                e.preventDefault();
-                sendEmergencyStop();
-                break;
-        }
-    });
-    
-    document.addEventListener('keyup', function(e) {
-        if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'w', 'W', 's', 'S', 'a', 'A', 'd', 'D'].includes(e.key)) {
-            stopMovement();
-        }
-    });
-});
-
-// Notification function
-function showNotification(message, type = 'info') {
-    // Create notification element
-    const notification = document.createElement('div');
-    notification.className = `notification ${type}`;
-    notification.innerHTML = `
-        <div class="notification-icon">
-            <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'warning' ? 'exclamation-triangle' : 'info-circle'}"></i>
-        </div>
-        <div class="notification-content">
-            <div class="notification-title">${type.charAt(0).toUpperCase() + type.slice(1)}</div>
-            <div class="notification-message">${message}</div>
-        </div>
-    `;
-    
-    // Add to page
-    document.body.appendChild(notification);
-    
-    // Show with animation
-    setTimeout(() => notification.classList.add('show'), 10);
-    
-    // Remove after 3 seconds
-    setTimeout(() => {
-        notification.classList.remove('show');
-        setTimeout(() => {
-            if (notification.parentNode) {
-                notification.parentNode.removeChild(notification);
-            }
-        }, 300);
-    }, 3000);
-}
+  // --- 3. CÁC LOGIC KHÁC (TRACKING) ---
+  let isTracking = false;
+  async function toggleTracking() {
+    isTracking = !isTracking;
+    const btn = document.getElementById('btnTracking');
+    const action = isTracking ? 'on' : 'off';
+    try {
+        await fetch(`/api/toggle_system/tracking/${action}`, { method: 'POST' });
+        updateTrackingUI();
+    } catch(e) { console.error(e); }
+  }
+  
+  function updateTrackingUI() {
+      const btn = document.getElementById('btnTracking');
+      if(isTracking) {
+          btn.style.background = 'var(--success-color)';
+          btn.style.color = 'white';
+          btn.innerHTML = '<i class="fas fa-crosshairs"></i> <span>AI Tracking: ON</span>';
+      } else {
+          btn.style.background = ''; 
+          btn.style.color = '';
+          btn.innerHTML = '<i class="fas fa-crosshairs"></i> <span>AI Tracking: OFF</span>';
+      }
+  }
+  
+  async function checkTrackingStatus() {
+      try {
+          const res = await fetch('/api/get_system_config');
+          const config = await res.json();
+          if (config.tracking) { isTracking = true; updateTrackingUI(); }
+      } catch(e) {}
+  }
+  
+  document.addEventListener('contextmenu', event => event.preventDefault());
+  checkTrackingStatus();
 </script>
+
+<style>
+/* CSS cho nút bấm */
+.dpad-btn {
+    width: 60px; height: 60px;
+    border: none; border-radius: 12px;
+    background: #334155; color: white;
+    font-size: 1.5rem; cursor: pointer;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+    transition: all 0.1s;
+    user-select: none; -webkit-user-select: none;
+}
+
+/* Hiệu ứng khi nhấn chuột HOẶC nhấn phím bàn phím */
+.dpad-btn:active, .dpad-btn.active { 
+    background: #2563eb; 
+    transform: translateY(2px);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.3);
+}
+
+.stop-btn:active, .stop-btn.active { background: #dc2626; }
+
+.video-controls { margin-top: 15px; display: flex; gap: 10px; flex-wrap: wrap; }
+.control-btn { 
+    padding: 10px 15px; border: 1px solid #475569; 
+    background: #1e293b; color: #cbd5e1; border-radius: 6px; cursor: pointer;
+    display: flex; align-items: center; gap: 8px;
+}
+</style>
 {% endblock %}
