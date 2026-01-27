@@ -1961,7 +1961,7 @@ body {
 }
 
 .header-left .page-title {
-  font-size: 1.5rem;
+  font-size: 1rem;
   font-weight: 700;
   color: var(--text-primary);
   margin: 0;
@@ -2838,7 +2838,8 @@ body {
 
 @media (max-width: 1200px) {
   .camera-grid {
-    grid-template-columns: 1fr;
+    display: flex;
+    flex-direction: column;
   }
 }
 
@@ -2873,6 +2874,12 @@ body {
   display: flex;
   align-items: center;
   gap: 1rem;
+}
+
+.camera-icon::before{
+  position: relative;
+  top: 10px;
+  left: 8px;
 }
 
 .camera-icon {
@@ -3071,6 +3078,11 @@ body {
   box-shadow: var(--shadow-blue);
 }
 
+.fa-sliders::before {
+  position: relative;
+  top: 12px;
+  left: 12px;
+}
 .quality-selector {
   display: flex;
   align-items: center;
@@ -3518,7 +3530,11 @@ body {
     grid-template-columns: 1fr;
   }
 }
-
+#cateory-icon::before{
+  position: relative;
+  top: 11px;
+  left: 11px;
+}
 .control-card {
   background: linear-gradient(145deg, var(--dark-blue-800), var(--card-bg));
   border-radius: var(--radius-xl);
