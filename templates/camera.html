@@ -44,6 +44,12 @@
         <button class="control-btn" onclick="location.reload()">
           <i class="fas fa-sync-alt"></i> Refresh
         </button>
+        <button class="control-btn" id="btnMic" 
+                onmousedown="startRecording()" onmouseup="stopRecording()"
+                ontouchstart="startRecording()" ontouchend="stopRecording()">
+          <i class="fas fa-microphone"></i>
+          <span>Hold to Talk</span>
+        </button>
       </div>
     </div>
 
@@ -102,6 +108,56 @@
 </div>
 
 <script>
+    // --- LOGIC TRUYỀN GIỌNG NÓI TỪ XA ---
+  let mediaRecorder;
+  let audioChunks = [];
+  
+  async function startRecording() {
+      audioChunks = [];
+      const btnMic = document.getElementById('btnMic');
+      
+      try {
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          mediaRecorder = new MediaRecorder(stream);
+          
+          mediaRecorder.ondataavailable = (event) => {
+              audioChunks.push(event.data);
+          };
+        
+          mediaRecorder.onstop = async () => {
+              const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+              const formData = new FormData();
+              formData.append('audio', audioBlob, 'voice.wav');
+          
+              // Gửi file âm thanh lên Pi
+              fetch('/api/play-remote-audio', {
+                  method: 'POST',
+                  body: formData
+              });
+              
+              // Dừng các track của mic để tắt đèn báo ghi âm trên trình duyệt
+              stream.getTracks().forEach(track => track.stop());
+          };
+        
+          mediaRecorder.start();
+          btnMic.style.background = '#ef4444'; // Đổi sang màu đỏ khi đang nói
+          btnMic.querySelector('span').innerText = "Speaking...";
+          console.log("Ghi âm bắt đầu...");
+      } catch (err) {
+          console.error("Không thể truy cập Microphone:", err);
+          alert("Vui lòng cấp quyền Microphone cho trình duyệt.");
+      }
+  }
+  
+  function stopRecording() {
+      if (mediaRecorder && mediaRecorder.state === "recording") {
+          mediaRecorder.stop();
+          const btnMic = document.getElementById('btnMic');
+          btnMic.style.background = ''; // Reset màu
+          btnMic.querySelector('span').innerText = "Hold to Talk";
+          console.log("Ghi âm kết thúc.");
+      }
+  }
   // --- 1. LOGIC GỬI LỆNH (GIỮ NGUYÊN) ---
   let moveInterval = null;
   

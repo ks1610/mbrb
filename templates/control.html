@@ -483,6 +483,11 @@ async function updateSystemStats() {
                 updateColorByValue(tempElem, stats.cpu_temp, 60, 75); // Ngưỡng: 60 (vàng), 75 (đỏ)
             }
         }
+        // const data = await response.json();
+        // const temp = data.cpu_temp || 0;
+        // // Update gauge text
+        // document.getElementById('cpuTemp').innerText = temp + "°C";
+
 
         // 4. Cập nhật Power Draw (Trạng thái nguồn)
         if (stats.power_draw) {
