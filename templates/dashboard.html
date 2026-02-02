@@ -227,10 +227,10 @@
 
         // Cập nhật các chỉ số khác (Quick Stats)
         if(document.getElementById('val-uptime')) document.getElementById('val-uptime').innerText = data.uptime;
-        if(document.getElementById('val-memory')) document.getElementById('val-memory').innerText = data.memory + '%';
-        if(document.getElementById('val-disk')) document.getElementById('val-disk').innerText = data.disk + '%';
-        if(document.getElementById('val-power')) document.getElementById('val-power').innerText = data.power;
-
+        if(document.getElementById('val-memory')) document.getElementById('val-memory').innerText = data.memory_usage + '%';
+        if(document.getElementById('val-disk')) document.getElementById('val-disk').innerText = data.disk_usage + '%';
+        if(document.getElementById('val-power')) document.getElementById('val-power').innerText = data.power_draw;
+      
       } catch (error) {
         console.error("Update error:", error);
       }

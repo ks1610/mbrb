@@ -281,7 +281,7 @@ def process_tracking_pid(frame):
         if abs(error_x) > 0.06:
             turn_speed = abs(error_x) * 255 * PID_KP_ROTATION + 110
             turn_speed = min(230, turn_speed)
-            cmd = "TR" if error_x > 0 else "TL"
+            cmd = "TL" if error_x > 0 else "TR"
             robot.send(cmd, turn_speed, 60, force=True)
             cv2.putText(frame, f"PID {cmd}", (10, 60), 1, 1, (0, 255, 0), 2)
         

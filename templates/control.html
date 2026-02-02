@@ -495,7 +495,7 @@ async function updateSystemStats() {
             if(powerElem) {
                 powerElem.textContent = stats.power_draw;
                 // Đổi màu nếu nguồn yếu
-                if (stats.power_draw !== "Ổn Định" && stats.power_draw !== "Normal") {
+                if (stats.power_draw !== "Ổn Định" && stats.power_draw !== "Stable") {
                     powerElem.style.color = "var(--danger-color)";
                 } else {
                     powerElem.style.color = "var(--success-color)";
@@ -953,6 +953,7 @@ function showNotification(message, type = 'info') {
 document.addEventListener('DOMContentLoaded', function() {
     // Load system configuration
     loadSystemConfig();
+    updateSystemStats();
     
     // Initialize performance chart
     const chart = initPerformanceChart();
