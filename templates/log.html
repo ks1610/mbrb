@@ -1,0 +1,364 @@
+{% extends "base.html" %}
+
+{% block title %}System Logs - Hanah IoT{% endblock %}
+{% block page_title %}System Log Manager{% endblock %}
+{% block breadcrumb %}Logs{% endblock %}
+
+{% block content %}
+<div class="control-container">
+  <div class="control-grid-log-page">
+    <div class="control-card full-width logs-card">
+      <div class="card-header">
+        <h3><i class="fas fa-clipboard-list"></i> System Logs</h3>
+        <div class="header-actions">
+          <button class="header-btn btn-primary" onclick="refreshLogs()">
+            <i class="fas fa-sync-alt"></i> Refresh
+          </button>
+          <button class="header-btn btn-danger" onclick="clearLogsServer()">
+            <i class="fas fa-trash-alt"></i> Clear All
+          </button>
+        </div>
+      </div>
+      
+      <div class="card-content">
+        <div class="logs-toolbar">
+          <div class="toolbar-left">
+            <div class="filter-group">
+              <label for="logFilter"><i class="fas fa-filter"></i> Filter by Level:</label>
+              <select id="logFilter" class="filter-select" onchange="filterLogs()">
+                <option value="all">All Logs</option>
+                <option value="error">Errors Only</option>
+                <option value="warning">Warnings</option>
+                <option value="info">Info</option>
+              </select>
+            </div>
+            
+            <div class="search-group">
+              <i class="fas fa-search"></i>
+              <input type="text" id="logSearch" class="search-input" placeholder="Search logs..." onkeyup="searchLogs()">
+            </div>
+          </div>
+          
+          <div class="toolbar-right">
+            <div class="log-stats">
+              <span class="stat-item">
+                <i class="fas fa-info-circle text-info"></i>
+                <span id="infoCount">0</span>
+              </span>
+              <span class="stat-item">
+                <i class="fas fa-exclamation-triangle text-warning"></i>
+                <span id="warningCount">0</span>
+              </span>
+              <span class="stat-item">
+                <i class="fas fa-exclamation-circle text-danger"></i>
+                <span id="errorCount">0</span>
+              </span>
+              <span class="stat-divider">|</span>
+              <span class="stat-total">
+                <i class="fas fa-list"></i>
+                <span id="logCount">0</span> total entries
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="logs-container-wrapper-logs-page">
+          <div class="logs-header">
+            <div class="log-col-time">Timestamp</div>
+            <div class="log-col-service">Service</div>
+            <div class="log-col-message">Message</div>
+            <div class="log-col-level">Level</div>
+          </div>
+          
+          <div class="logs-container" id="logsContainer">
+            <!-- Logs will be loaded here -->
+          </div>
+          
+          <div class="logs-empty" id="logsEmptyState">
+            <i class="fas fa-clipboard-check"></i>
+            <h4>No Logs Available</h4>
+            <p>System logs will appear here when available</p>
+          </div>
+          
+          <div class="logs-loading" id="logsLoading">
+            <div class="loading-spinner"></div>
+            <p>Loading logs...</p>
+          </div>
+        </div>
+        
+        <div class="logs-footer">
+          <div class="auto-refresh">
+            <input type="checkbox" id="autoRefresh" checked>
+            <label for="autoRefresh">Auto-refresh every 10 seconds</label>
+          </div>
+          <div class="export-options">
+            <button class="btn-secondary btn-sm" onclick="exportLogs('txt')">
+              <i class="fas fa-download"></i> Export as TXT
+            </button>
+            <button class="btn-secondary btn-sm" onclick="exportLogs('json')">
+              <i class="fas fa-file-code"></i> Export as JSON
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let allLogs = [];
+let autoRefreshInterval;
+
+async function fetchLogsFromServer() {
+    showLoading(true);
+    try {
+        const response = await fetch('/api/get_logs');
+        if (response.status === 401) {
+            window.location.href = '/';
+            return;
+        }
+        const logs = await response.json();
+        allLogs = logs;
+        
+        if (!logs || logs.length === 0) {
+            showEmptyState(true);
+            updateStats(0, 0, 0);
+            return;
+        }
+        
+        showEmptyState(false);
+        displayLogs(logs);
+    } catch (error) {
+        console.error("Error loading logs:", error);
+        showErrorState();
+    } finally {
+        showLoading(false);
+    }
+}
+
+function displayLogs(logs) {
+    const container = document.getElementById('logsContainer');
+    container.innerHTML = '';
+    
+    let infoCount = 0, warningCount = 0, errorCount = 0;
+    
+    [...logs].reverse().forEach(log => {
+        const entry = document.createElement('div');
+        entry.className = `log-entry-log-page ${log.level.toLowerCase()}`;
+        entry.setAttribute('data-timestamp', log.time);
+        entry.setAttribute('data-service', log.service.toLowerCase());
+        entry.setAttribute('data-message', log.message.toLowerCase());
+        entry.setAttribute('data-level', log.level.toLowerCase());
+        
+        // Count log levels
+        switch(log.level.toLowerCase()) {
+            case 'info': infoCount++; break;
+            case 'warning': warningCount++; break;
+            case 'error': errorCount++; break;
+        }
+        
+        entry.innerHTML = `
+            <div class="log-col-time">
+                <i class="far fa-clock"></i>
+                ${log.time}
+            </div>
+            <div class="log-col-service">
+                <span class="service-badge">${log.service}</span>
+            </div>
+            <div class="log-col-message">
+                <div class="message-content">${log.message}</div>
+                ${log.details ? `<div class="message-details">${log.details}</div>` : ''}
+            </div>
+            <div class="log-col-level">
+                <span class="level-badge ${log.level.toLowerCase()}">
+                    <i class="fas ${getLevelIcon(log.level)}"></i>
+                    ${log.level.toUpperCase()}
+                </span>
+            </div>
+        `;
+        
+        // Add click to copy message
+        entry.querySelector('.message-content').addEventListener('click', function() {
+            copyToClipboard(log.message);
+            showToast('Message copied to clipboard');
+        });
+        
+        container.appendChild(entry);
+    });
+    
+    updateStats(infoCount, warningCount, errorCount);
+}
+
+function getLevelIcon(level) {
+    switch(level.toLowerCase()) {
+        case 'error': return 'fa-exclamation-circle';
+        case 'warning': return 'fa-exclamation-triangle';
+        case 'info': return 'fa-info-circle';
+        default: return 'fa-info-circle';
+    }
+}
+
+function updateStats(info, warning, error) {
+    document.getElementById('infoCount').textContent = info;
+    document.getElementById('warningCount').textContent = warning;
+    document.getElementById('errorCount').textContent = error;
+    document.getElementById('logCount').textContent = info + warning + error;
+}
+
+function filterLogs() {
+    const level = document.getElementById('logFilter').value;
+    const search = document.getElementById('logSearch').value.toLowerCase();
+    
+    let filtered = [...allLogs].reverse();
+    
+    if (level !== 'all') {
+        filtered = filtered.filter(log => log.level.toLowerCase() === level);
+    }
+    
+    if (search) {
+        filtered = filtered.filter(log => 
+            log.message.toLowerCase().includes(search) ||
+            log.service.toLowerCase().includes(search)
+        );
+    }
+    
+    const container = document.getElementById('logsContainer');
+    container.innerHTML = '';
+    
+    if (filtered.length === 0) {
+        showEmptyState(true);
+        return;
+    }
+    
+    filtered.forEach(log => {
+        const entry = document.createElement('div');
+        entry.className = `log-entry-log-page ${log.level.toLowerCase()}`;
+        entry.innerHTML = `
+            <div class="log-col-time">
+                <i class="far fa-clock"></i>
+                ${log.time}
+            </div>
+            <div class="log-col-service">
+                <span class="service-badge">${log.service}</span>
+            </div>
+            <div class="log-col-message">${log.message}</div>
+            <div class="log-col-level">
+                <span class="level-badge ${log.level.toLowerCase()}">
+                    <i class="fas ${getLevelIcon(log.level)}"></i>
+                    ${log.level.toUpperCase()}
+                </span>
+            </div>
+        `;
+        container.appendChild(entry);
+    });
+}
+
+function searchLogs() {
+    filterLogs();
+}
+
+function clearLogsServer() {
+    if (!confirm('Are you sure you want to clear all logs? This action cannot be undone.')) return;
+    
+    fetch('/api/clear_logs', { method: 'POST' })
+        .then(() => {
+            showToast('All logs cleared successfully');
+            fetchLogsFromServer();
+        })
+        .catch(error => {
+            console.error('Error clearing logs:', error);
+            showToast('Failed to clear logs', 'error');
+        });
+}
+
+function refreshLogs() {
+    fetchLogsFromServer();
+    showToast('Logs refreshed');
+}
+
+function exportLogs(format) {
+    if (allLogs.length === 0) {
+        showToast('No logs to export', 'warning');
+        return;
+    }
+    
+    let content, mimeType, filename;
+    
+    if (format === 'json') {
+        content = JSON.stringify(allLogs, null, 2);
+        mimeType = 'application/json';
+        filename = `system-logs-${new Date().toISOString().split('T')[0]}.json`;
+    } else {
+        content = allLogs.map(log => 
+            `[${log.time}] [${log.service}] [${log.level.toUpperCase()}] ${log.message}`
+        ).join('\n');
+        mimeType = 'text/plain';
+        filename = `system-logs-${new Date().toISOString().split('T')[0]}.txt`;
+    }
+    
+    const blob = new Blob([content], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    showToast(`Logs exported as ${format.toUpperCase()}`);
+}
+
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).catch(err => {
+        console.error('Failed to copy:', err);
+    });
+}
+
+function showToast(message, type = 'success') {
+    // You can implement a toast notification system here
+    alert(message); // Temporary simple alert
+}
+
+function showLoading(show) {
+    document.getElementById('logsLoading').style.display = show ? 'flex' : 'none';
+}
+
+function showEmptyState(show) {
+    document.getElementById('logsEmptyState').style.display = show ? 'flex' : 'none';
+    document.getElementById('logsContainer').style.display = show ? 'none' : 'block';
+}
+
+function showErrorState() {
+    const container = document.getElementById('logsContainer');
+    container.innerHTML = `
+        <div class="log-error">
+            <i class="fas fa-exclamation-triangle"></i>
+            <h4>Connection Error</h4>
+            <p>Unable to connect to server</p>
+            <button onclick="fetchLogsFromServer()" class="btn-primary">
+                <i class="fas fa-redo"></i> Retry
+            </button>
+        </div>
+    `;
+}
+
+// Auto-refresh functionality
+function setupAutoRefresh() {
+    const checkbox = document.getElementById('autoRefresh');
+    if (checkbox.checked) {
+        autoRefreshInterval = setInterval(fetchLogsFromServer, 10000);
+    } else {
+        clearInterval(autoRefreshInterval);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    fetchLogsFromServer();
+    setupAutoRefresh();
+    
+    document.getElementById('autoRefresh').addEventListener('change', setupAutoRefresh);
+});
+
+</script>
+{% endblock %}
