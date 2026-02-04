@@ -30,6 +30,11 @@ import serial
 from flask import Flask, request, redirect, url_for, session, render_template, jsonify, Response
 from dotenv import load_dotenv
 
+import wave
+import tempfile
+from pathlib import Path
+
+print("🔥 NEW VERSION LOADED @", time.strftime("%H:%M:%S"))
 
 # ==========================================
 # SYSTEM INITIALIZATION
@@ -43,7 +48,7 @@ def suppress_stderr():
     os.close(devnull)
 
 
-suppress_stderr()
+#suppress_stderr()
 load_dotenv()
 
 
@@ -102,10 +107,13 @@ SYS_INSTRUCT_BASE = (
     "không sử dụng biểu tượng cảm xúc (emoji)."
 )
 
+audio_lock = threading.Lock()
 
 # ==========================================
 # GLOBAL VARIABLES
 # ==========================================
+LAST_TONE_TIME = 0
+
 # Frame Management
 global_frame = None
 frame_lock = threading.Lock()
@@ -122,6 +130,8 @@ SYSTEM_CONFIG = {
     "sound": True,
     "tracking": False
 }
+
+SYSTEM_LOGS = []
 
 # Network Session
 weather_session = requests.Session()
@@ -147,6 +157,20 @@ except:
     pass
 
 amp = OutputDevice(AMP_PIN, active_high=True, initial_value=False)
+
+
+try:
+    cv2.setNumThreads(1)
+except Exception:
+    pass
+
+# ---------- helper to play audio in a thread (blocking) ----------
+
+def _play_wav_blocking(path):
+    subprocess.run(
+        ['/usr/bin/aplay', '-D', 'plughw:2,0', path],
+        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+    )
 
 
 # ==========================================
@@ -179,7 +203,16 @@ except:
 # FLASK APP INITIALIZATION
 # ==========================================
 
-app = Flask(__name__)
+# app = Flask(__name__)
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+app = Flask(
+    __name__,
+    template_folder=os.path.join(BASE_DIR, "templates"),
+    static_folder=os.path.join(BASE_DIR, "static")
+)
+
 app.secret_key = "hanah_robot_key"
 log = logging.getLogger('werkzeug')
 log.setLevel(logging.ERROR)
@@ -329,7 +362,7 @@ def camera_thread():
 
 
 # Start camera thread
-threading.Thread(target=camera_thread, daemon=True).start()
+#threading.Thread(target=camera_thread, daemon=True).start()
 
 
 # ==========================================
@@ -464,21 +497,32 @@ def analyze_command_similarity(user_text):
     
     return best_cmd if best_score >= SIMILARITY_THRESHOLD else None
 
+def convert_wav_safe(src, dst):
+    subprocess.run(
+        [
+            "/usr/bin/ffmpeg", "-y",
+            "-i", src,
+            "-ac", "1",             # Mono (loa robot thường là mono)
+            "-ar", "44100",         # <--- ĐỔI THÀNH 44100 (Chuẩn nhất)
+            "-acodec", "pcm_s16le", # 16-bit PCM
+            dst
+        ],
+        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+    )
 
-# ==========================================
-# AUDIO FUNCTIONS
-# ==========================================
-async def speak(text):
-    """Text-to-speech output"""
-    if not SYSTEM_CONFIG["sound"] or STOP_EVENT.is_set():
+async def speak(text: str):
+    if not SYSTEM_CONFIG.get("sound", True) or STOP_EVENT.is_set():
         return
-    
-    clean = re.sub(r'\([^)]*\)', '', text).replace("*", "")
-    if not clean.strip():
+
+    clean = re.sub(r"\([^)]*\)", "", text).replace("*", "").strip()
+    if not clean:
         return
-    
+
     print(f"Hanah: {clean}")
-    
+
+    raw_wav = f"/tmp/hanah_raw_{int(time.time()*1000)}.wav"
+    final_wav = f"/tmp/hanah_{int(time.time()*1000)}.wav"
+
     try:
         communicate = edge_tts.Communicate(
             clean,
@@ -486,94 +530,97 @@ async def speak(text):
             pitch=TTS_PITCH,
             rate=TTS_RATE
         )
-        await communicate.save("reply.mp3")
-        amp.on()
-        sleep(0.1)
-        if not pygame.mixer.get_init():
-            pygame.mixer.init(frequency=24000)
-        
-        pygame.mixer.music.load("reply.mp3")
-        pygame.mixer.music.play()
-        
-        while pygame.mixer.music.get_busy():
-            sleep(0.05)
-        
-        pygame.mixer.quit()
+        await communicate.save(raw_wav)
+
+        # 🔥 THIS LINE FIXES THE GARBAGE SOUND
+        convert_wav_safe(raw_wav, final_wav)
+
+        loop = asyncio.get_running_loop()
+        await loop.run_in_executor(None, _play_wav_blocking, final_wav)
+
+    except Exception as e:
+        print(f"speak() error: {e}")
         amp.off()
-        
-        if os.path.exists("reply.mp3"):
-            os.remove("reply.mp3")
-    except:
-        amp.off()
+    finally:
+        for f in (raw_wav, final_wav):
+            try:
+                if os.path.exists(f):
+                    os.remove(f)
+            except:
+                pass
 
 def listen():
-    """Speech recognition input"""
+    global LAST_TONE_TIME
+
     if not SYSTEM_CONFIG["mic"]:
         return None
-    
+
     r = sr.Recognizer()
     r.energy_threshold = 2000
-    
+
     try:
         with sr.Microphone(device_index=MIC_DEVICE_INDEX) as source:
-            # 1. Lọc nhiễu (Robot đang chuẩn bị)
             r.adjust_for_ambient_noise(source, duration=0.5)
-            
-            # 2. Phát tiếng "Tinh" báo hiệu sẵn sàng
-            play_activation_sound()
-            print("\n>>> 👂 Đang lắng nghe...") # In log để bạn dễ debug
-            
-            # 3. Bắt đầu thu âm giọng nói
+
+            now = time.time()
+            if now - LAST_TONE_TIME > 3:   # 3s cooldown
+                play_activation_sound()
+                LAST_TONE_TIME = now
+
             audio = r.listen(source, timeout=5, phrase_time_limit=8)
             return r.recognize_google(audio, language="vi-VN")
+
     except sr.WaitTimeoutError:
-        return None # Không nói gì thì bỏ qua
-    except Exception as e:
-        # print(f"Lỗi mic: {e}") 
         return None
 
+    except sr.UnknownValueError:
+        return None
+
+    except sr.RequestError as e:
+        print(f"Speech API error: {e}")
+        return None
+
+    except Exception as e:
+        print(f"Listen error: {e}")
+        return None
+
+
 def play_activation_sound():
-    """Tạo âm thanh 'Tinh' ngắn gọn để báo hiệu bắt đầu nghe"""
-    if not SYSTEM_CONFIG["sound"]: return
+    """Non-blocking activation 'tinh' via temporary wav + aplay"""
+    if not SYSTEM_CONFIG.get("sound", True):
+        return
 
     try:
-        # Bật Amply
-        amp.on()
-        sleep(0.05)
-
-        # Khởi tạo mixer nếu chưa có
-        if not pygame.mixer.get_init():
-            pygame.mixer.init(frequency=24000, size=-16, channels=1)
-
-        # TẠO ÂM THANH BẰNG NUMPY (Sine wave 880Hz - Nốt La cao)
-        duration = 0.15  # Độ dài 0.15 giây
+        duration = 0.12
         sample_rate = 24000
         n_samples = int(sample_rate * duration)
-        
-        # Tạo sóng âm
         t = np.linspace(0, duration, n_samples, False)
-        # Tần số 880Hz tạo tiếng "Tinh" trong trẻo
-        tone = np.sin(880 * t * 2 * np.pi) 
-        
-        # Làm dịu âm thanh ở cuối để không bị "bụp" (Fade out)
+        tone = np.sin(880 * t * 2 * np.pi)
         fade_out = np.linspace(1, 0, n_samples)
-        tone = tone * fade_out
-
-        # Chuyển đổi sang định dạng 16-bit cho Pygame
+        tone = (tone * fade_out)
         audio_data = (tone * 32767).astype(np.int16)
-        
-        # Phát âm thanh
-        sound = pygame.sndarray.make_sound(audio_data)
-        sound.play()
-        
-        # Đợi phát xong
-        sleep(duration + 0.05)
-        
+
+        # write temp wav
+        tmp = tempfile.NamedTemporaryFile(prefix="hanah_tone_", suffix=".wav", delete=False)
+        tmp_name = tmp.name
+        tmp.close()
+        with wave.open(tmp_name, 'wb') as wf:
+            wf.setnchannels(1)
+            wf.setsampwidth(2)  # 16-bit
+            wf.setframerate(sample_rate)
+            wf.writeframes(audio_data.tobytes())
+
+        # play in background thread so listen() is immediate
+        _play_wav_blocking(tmp_name)
+
     except Exception as e:
         print(f"Lỗi âm thanh cue: {e}")
-    finally:
-        # Tắt Amply ngay lập tức để tiết kiệm điện
-        amp.off()
+        try:
+            amp.off()
+        except:
+            pass
+
+
 # ==========================================
 # FLASK ROUTES
 # ==========================================
@@ -590,6 +637,9 @@ def login():
         return render_template('login.html', error="Sai mật khẩu!")
     return render_template('login.html')
 
+@app.route('/health')
+def health():
+    return "OK", 200
 
 @app.route('/dashboard')
 def dashboard():
@@ -696,6 +746,30 @@ def system_stats():
         print(f"Stats Error: {e}")
         return jsonify({"error": "Internal Error"}), 500
 
+def add_system_log(message, level="info", service="SYSTEM"):
+    timestamp = datetime.now().strftime("%H:%M:%S")
+    log_entry = {"time": timestamp, "service": service, "message": message, "level": level}
+    SYSTEM_LOGS.append(log_entry)
+    if len(SYSTEM_LOGS) > 100: SYSTEM_LOGS.pop(0) # Giữ tối đa 100 log
+
+# 2. Thêm Route để mở trang log
+@app.route('/logs')
+def log_page():
+    if not session.get('logged_in'): return redirect(url_for('login'))
+    return render_template('log.html')
+
+# 3. Thêm API lấy danh sách log
+@app.route('/api/get_logs')
+def get_logs():
+    if not session.get('logged_in'): return jsonify({"error": "Auth"}), 401
+    return jsonify(SYSTEM_LOGS)
+
+# 4. Thêm API xóa log
+@app.route('/api/clear_logs', methods=['POST'])
+def clear_logs_api():
+    global SYSTEM_LOGS
+    SYSTEM_LOGS = []
+    return jsonify({"status": "success"})
 
 @app.route('/api/get_system_config')
 def get_config():
@@ -707,7 +781,7 @@ def get_config():
 
 @app.route('/api/toggle_system/<target>/<action>', methods=['POST'])
 def toggle_system(target, action):
-    """Toggle system components"""
+    """Toggle system components and RECORD logs"""
     if not session.get('logged_in'):
         return jsonify({"error": "Unauthorized"}), 401
     
@@ -715,6 +789,12 @@ def toggle_system(target, action):
         state = (action == "on")
         SYSTEM_CONFIG[target] = state
         
+        # --- CHỈNH SỬA QUAN TRỌNG: GỌI HÀM GHI LOG TẠI ĐÂY ---
+        log_msg = f"Đã { 'bật' if state else 'tắt' } dịch vụ {target.upper()}"
+        level = "info"
+        add_system_log(log_msg, level, target.upper())
+        # ---------------------------------------------------
+
         status_msg = "STARTED" if state else "STOPPED"
         print(f">>> ⚙️ Service {target.upper()} is {status_msg}")
         
@@ -724,7 +804,6 @@ def toggle_system(target, action):
         })
     
     return jsonify({"error": "Invalid target"}), 400
-
 
 @app.route('/api/move', methods=['POST'])
 def api_move():
@@ -737,6 +816,19 @@ def api_move():
     )
     return jsonify({"status": "sent"})
 
+@app.route('/control/<int:relay>/<state>') # Route này xử lý GET từ device.html
+def control_relay_web(relay, state):
+    if not session.get('logged_in'):
+        return jsonify({"error": "Unauthorized"}), 401
+    
+    # 1. Gửi lệnh MQTT
+    mqtt_client.publish(TOPIC_CMD, f"{relay}:{state}")
+    
+    # 2. Ghi System Log
+    log_msg = f"Web UI: Đã { 'BẬT' if state == 'on' else 'TẮT' } thiết bị số {relay}"
+    add_system_log(log_msg, "info", "DEVICE_WEB")
+    
+    return jsonify({"status": "success", "device": relay, "state": state})
 
 @app.route('/api/play-remote-audio', methods=['POST'])
 def play_remote_audio():
@@ -753,26 +845,17 @@ def play_remote_audio():
         try:
             subprocess.run(
                 [
-                    'ffmpeg', '-y', '-i', raw_path,
-                    '-acodec', 'pcm_s16le',
-                    '-ar', '44100', '-ac', '1',
-                    conv_path
+                 'ffmpeg', '-y', '-i', raw_path,
+                 '-acodec', 'pcm_s16le',
+                 '-ar', '24000', '-ac', '1',
+                 conv_path
                 ],
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL
             )
             
-            amp.on()
             sleep(0.1)
-            pygame.mixer.init()
-            pygame.mixer.music.load(conv_path)
-            pygame.mixer.music.play()
-            
-            while pygame.mixer.music.get_busy():
-                sleep(0.1)
-            
-            pygame.mixer.quit()
-            amp.off()
+            _play_wav_blocking(conv_path)
             
             if os.path.exists(raw_path):
                 os.remove(raw_path)
@@ -783,55 +866,6 @@ def play_remote_audio():
     
     threading.Thread(target=play_task, daemon=True).start()
     return jsonify({"status": "playing"})
-
-
-# ==========================================
-# MAIN ASYNC LOOP
-# ==========================================
-
-async def main_loop():
-    """Main voice assistant loop"""
-    await speak("Hanah khởi động xong rồi nè!")
-    
-    while not STOP_EVENT.is_set():
-        try:
-            user_input = listen()
-            if not user_input:
-                continue
-            
-            print(f"👤: {user_input}")
-            
-            if "tạm biệt" in user_input.lower(): await speak("Bai bai."); break 
-            
-            # 1. Check device commands
-            cmd = analyze_command_similarity(user_input)
-            if cmd:
-                mqtt_client.publish(TOPIC_CMD, f"{cmd[0]}:{cmd[1]}")
-                action = 'bật' if cmd[1] == 'on' else 'tắt'
-                await speak(f"Dạ, em đã {action} đèn {cmd[0]} rồi ạ!")
-                continue
-            
-            # 2. Check info requests
-            info = check_info_request(user_input)
-            if info:
-                await speak(info)
-                continue
-            
-            # 3. AI conversation
-            if SYSTEM_CONFIG["ai"]:
-                res = ollama.chat(
-                    model=LOCAL_MODEL,
-                    messages=[
-                        {'role': 'system', 'content': SYS_INSTRUCT_BASE},
-                        {'role': 'user', 'content': user_input}
-                    ]
-                )
-                await speak(res['message']['content'])
-        
-        except Exception as e:
-            print(f"Lỗi vòng lặp: {e}")
-            sleep(1)
-
 
 # ==========================================
 # FLASK SERVER RUNNER
@@ -846,19 +880,110 @@ def run_flask():
         threaded=True
     )
 
+def run_async_loop():
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    loop.run_until_complete(main_loop())
 
-# ==========================================
-# MAIN ENTRY POINT
-# ==========================================
-if __name__ == "__main__":
-    # Setup signal handler for graceful shutdown
-    signal.signal(signal.SIGINT, lambda s, f: STOP_EVENT.set())
-    
-    # Start Flask server in background thread
-    threading.Thread(target=run_flask, daemon=True).start()
-    
-    # Run main async loop
+def start_camera(delay=3):
+    def _start():
+        print(">>> ⏳ Waiting before starting camera...")
+        time.sleep(delay)
+        if SYSTEM_CONFIG["camera"]:
+            threading.Thread(
+                target=camera_thread,
+                daemon=True
+            ).start()
+            print(">>> 📸 Camera thread started.")
+    threading.Thread(target=_start, daemon=True).start()
+
+async def main_loop():
+    await asyncio.sleep(3)
     try:
-        asyncio.run(main_loop())
-    except KeyboardInterrupt:
-        pass
+        await speak("Hanah khởi động")
+    except Exception as e:
+        print(f"Greeting failed: {e}")
+
+    loop = asyncio.get_event_loop()
+
+    while not STOP_EVENT.is_set():
+        try:
+            # call blocking listen() in executor
+            user_input = await loop.run_in_executor(None, listen)
+
+            if not user_input:
+                # small sleep to yield CPU
+                await asyncio.sleep(0.1)
+                continue
+
+            print(f"👤: {user_input}")
+
+            # exit phrase
+            if "tạm biệt" in user_input.lower():
+                await speak("Bai bai.")
+                break
+
+            # 1) Device control via language
+            cmd = analyze_command_similarity(user_input)
+            if cmd:
+                device_id, cmd_state = cmd
+                try:
+                    # MQTT publish (paho is thread-safe for publish)
+                    mqtt_client.publish(TOPIC_CMD, f"{device_id}:{cmd_state}")
+                    add_system_log(f"Gửi lệnh MQTT: Thiết bị {device_id} -> {cmd_state.upper()}", "info", "MQTT_CMD")
+                except Exception as e:
+                    print(f"MQTT publish error: {e}")
+
+                action_vn = 'bật' if cmd_state == 'on' else 'tắt'
+                await speak(f"Đã {action_vn} đèn {device_id}!")
+                continue
+
+            # 2) Info requests (time/weather)
+            info = check_info_request(user_input)
+            if info:
+                await speak(info)
+                continue
+
+            # 3) AI conversation (ollama.chat is blocking => run in executor)
+            if SYSTEM_CONFIG.get("ai", True):
+                try:
+                    res = await loop.run_in_executor(None, lambda: ollama.chat(
+                        model=LOCAL_MODEL,
+                        messages=[
+                            {'role': 'system', 'content': SYS_INSTRUCT_BASE},
+                            {'role': 'user', 'content': user_input}
+                        ]
+                    ))
+                    # extract text robustly
+                    ai_text = None
+                    try:
+                        ai_text = res['message']['content']
+                    except Exception:
+                        if isinstance(res, str):
+                            ai_text = res
+                        elif isinstance(res, dict) and 'content' in res:
+                            ai_text = res['content']
+                    if ai_text:
+                        await speak(ai_text)
+                except Exception as e:
+                    print(f"AI chat error: {e}")
+                    await asyncio.sleep(0.5)
+
+        except Exception as e:
+            print(f"main_loop error: {e}")
+            await asyncio.sleep(0.5)
+
+if __name__ == "__main__":
+    # start async AI loop WITHOUT audio greeting
+    threading.Thread(target=run_async_loop, daemon=True).start()
+
+    # start camera later
+    start_camera(delay=3)
+
+    # start web server LAST
+    app.run(
+        host="0.0.0.0",
+        port=WEB_PORT,
+        use_reloader=False,
+        threaded=True
+    )
