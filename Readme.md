@@ -70,4 +70,8 @@ Image source: https://randomnerdtutorials.com/raspberry-pi-pinout-gpios/
 * Week1 (start: 1/4/2026): Can communicate as a child and can separate the request of communication and control device.
 * Week2 (start: 1/12/2026): Can update news and weather in a location
 * Week3 (start: 1/19/2026): Complete the hardware assembly, web server control interface and imtegrate cammera with raspberrypi.
-* Week 4 (start: 1/26/2026): Updated motors moving control and combine camera tracking with motors 
+* Week4 (start: 1/26/2026): Updated motors moving control and combine camera tracking with motors 
+* Week5 (start: 2/2/2026): Updated system start automantically when rasperrypi turned on and remember system log for control page
+
+## About to update:
+* Face recognition and Robot interaction
