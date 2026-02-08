@@ -1,0 +1,38 @@
+[
+  {
+    "time": "20:40:02",
+    "service": "MIC",
+    "message": "Đã tắt dịch vụ MIC",
+    "level": "info"
+  },
+  {
+    "time": "20:40:03",
+    "service": "SOUND",
+    "message": "Đã tắt dịch vụ SOUND",
+    "level": "info"
+  },
+  {
+    "time": "20:45:41",
+    "service": "SOUND",
+    "message": "Đã bật dịch vụ SOUND",
+    "level": "info"
+  },
+  {
+    "time": "20:45:43",
+    "service": "MIC",
+    "message": "Đã bật dịch vụ MIC",
+    "level": "info"
+  },
+  {
+    "time": "20:45:44",
+    "service": "MIC",
+    "message": "Đã tắt dịch vụ MIC",
+    "level": "info"
+  },
+  {
+    "time": "20:46:35",
+    "service": "SOUND",
+    "message": "Đã tắt dịch vụ SOUND",
+    "level": "info"
+  }
+]

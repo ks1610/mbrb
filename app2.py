@@ -33,8 +33,15 @@ from dotenv import load_dotenv
 import wave
 import tempfile
 from pathlib import Path
+import json
 
 print("🔥 NEW VERSION LOADED @", time.strftime("%H:%M:%S"))
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+LOG_FILE = os.path.join(BASE_DIR, "system_logs.json")
+CONFIG_FILE = os.path.join(BASE_DIR, "system_config.json")
+file_lock = threading.Lock()
 
 # ==========================================
 # SYSTEM INITIALIZATION
@@ -109,6 +116,58 @@ SYS_INSTRUCT_BASE = (
 
 audio_lock = threading.Lock()
 
+
+
+# ==========================================
+# DATA PERSISTENCE FUNCTIONS
+# ==========================================
+
+def load_system_config():
+    """Đọc cấu hình từ file JSON"""
+    default_config = {
+        "camera": True,
+        "ai": True,
+        "mic": True,
+        "sound": True,
+        "tracking": False
+    }
+    if os.path.exists(CONFIG_FILE):
+        try:
+            with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except Exception as e:
+            print(f"❌ Lỗi đọc config: {e}")
+            return default_config
+    return default_config
+
+def save_system_config():
+    """Lưu cấu hình vào file JSON"""
+    try:
+        with file_lock:
+            with open(CONFIG_FILE, 'w', encoding='utf-8') as f:
+                json.dump(SYSTEM_CONFIG, f, ensure_ascii=False, indent=2)
+    except Exception as e:
+        print(f"❌ Lỗi lưu config: {e}")
+
+def load_system_logs():
+    """Đọc logs từ file JSON"""
+    if os.path.exists(LOG_FILE):
+        try:
+            with open(LOG_FILE, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except:
+            return []
+    return []
+
+def save_system_logs():
+    """Lưu logs vào file JSON"""
+    try:
+        with file_lock:
+            with open(LOG_FILE, 'w', encoding='utf-8') as f:
+                json.dump(SYSTEM_LOGS, f, ensure_ascii=False, indent=2)
+    except Exception as e:
+        print(f"❌ Lỗi lưu logs: {e}")
+
 # ==========================================
 # GLOBAL VARIABLES
 # ==========================================
@@ -123,15 +182,23 @@ frame_queue = Queue(maxsize=2)
 STOP_EVENT = threading.Event()
 
 # System State
-SYSTEM_CONFIG = {
-    "camera": True,
-    "ai": True,
-    "mic": True,
-    "sound": True,
-    "tracking": False
-}
+# SYSTEM_CONFIG = {
+#     "camera": True,
+#     "ai": True,
+#     "mic": True,
+#     "sound": True,
+#     "tracking": False
+# }
 
-SYSTEM_LOGS = []
+# SYSTEM_LOGS = []
+
+# System State -> SỬA: Load từ file
+SYSTEM_CONFIG = load_system_config()
+print(f"Loaded Config: {SYSTEM_CONFIG}")
+
+# System Logs -> SỬA: Load từ file
+SYSTEM_LOGS = load_system_logs()
+print(f"Loaded {len(SYSTEM_LOGS)} logs.")
 
 # Network Session
 weather_session = requests.Session()
@@ -204,8 +271,6 @@ except:
 # ==========================================
 
 # app = Flask(__name__)
-
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 app = Flask(
     __name__,
@@ -416,7 +481,6 @@ def get_disk_usage():
         return round(psutil.disk_usage('/').percent, 1)
     except:
         return 0
-
 
 # ==========================================
 # WEATHER & INFO FUNCTIONS
@@ -751,6 +815,8 @@ def add_system_log(message, level="info", service="SYSTEM"):
     log_entry = {"time": timestamp, "service": service, "message": message, "level": level}
     SYSTEM_LOGS.append(log_entry)
     if len(SYSTEM_LOGS) > 100: SYSTEM_LOGS.pop(0) # Giữ tối đa 100 log
+    
+    save_system_logs()
 
 # 2. Thêm Route để mở trang log
 @app.route('/logs')
@@ -769,6 +835,8 @@ def get_logs():
 def clear_logs_api():
     global SYSTEM_LOGS
     SYSTEM_LOGS = []
+    save_system_logs()
+    
     return jsonify({"status": "success"})
 
 @app.route('/api/get_system_config')
@@ -788,8 +856,10 @@ def toggle_system(target, action):
     if target in SYSTEM_CONFIG:
         state = (action == "on")
         SYSTEM_CONFIG[target] = state
+
+        save_system_config()
         
-        # --- CHỈNH SỬA QUAN TRỌNG: GỌI HÀM GHI LOG TẠI ĐÂY ---
+        # --- HÀM GHI LOG ---
         log_msg = f"Đã { 'bật' if state else 'tắt' } dịch vụ {target.upper()}"
         level = "info"
         add_system_log(log_msg, level, target.upper())
