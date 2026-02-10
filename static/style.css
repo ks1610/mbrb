@@ -1807,7 +1807,7 @@ body {
 }
 
 .logo-text {
-  font-size: 1.25rem;
+  font-size: 1rem;
   font-weight: 700;
   background: linear-gradient(45deg, var(--primary-color), var(--accent-blue));
   -webkit-background-clip: text;
@@ -2599,16 +2599,6 @@ body {
   font-size: 1.5rem;
   color: white;
   box-shadow: var(--shadow-blue);
-}
-
-.logo-text {
-  font-size: 1.25rem;
-  font-weight: 700;
-  background: linear-gradient(45deg, var(--primary-color), var(--accent-blue));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  margin: 0;
 }
 
 /* Responsive */
