@@ -2656,6 +2656,8 @@ body {
 
 /* Main Content */
 .main-content {
+  display: flex;
+  flex-direction: column;
   margin-left: 260px;
   min-height: 100vh;
   background: var(--dark-blue-900);
