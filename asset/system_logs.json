@@ -1,0 +1,602 @@
+[
+  {
+    "time": "00:00:25",
+    "service": "BLUETOOTH",
+    "message": "BLE: FW @ 200",
+    "level": "info"
+  },
+  {
+    "time": "00:00:25",
+    "service": "BLUETOOTH",
+    "message": "BLE: FW @ 200",
+    "level": "info"
+  },
+  {
+    "time": "00:00:25",
+    "service": "BLUETOOTH",
+    "message": "BLE: FW @ 200",
+    "level": "info"
+  },
+  {
+    "time": "00:00:26",
+    "service": "BLUETOOTH",
+    "message": "BLE: FW @ 200",
+    "level": "info"
+  },
+  {
+    "time": "00:00:26",
+    "service": "BLUETOOTH",
+    "message": "BLE: FW @ 200",
+    "level": "info"
+  },
+  {
+    "time": "00:00:26",
+    "service": "BLUETOOTH",
+    "message": "BLE: FW @ 200",
+    "level": "info"
+  },
+  {
+    "time": "00:00:27",
+    "service": "BLUETOOTH",
+    "message": "BLE: FW @ 200",
+    "level": "info"
+  },
+  {
+    "time": "00:00:27",
+    "service": "BLUETOOTH",
+    "message": "BLE: FW @ 200",
+    "level": "info"
+  },
+  {
+    "time": "00:00:28",
+    "service": "BLUETOOTH",
+    "message": "BLE: FW @ 200",
+    "level": "info"
+  },
+  {
+    "time": "00:00:28",
+    "service": "BLUETOOTH",
+    "message": "BLE: FW @ 200",
+    "level": "info"
+  },
+  {
+    "time": "00:00:30",
+    "service": "BLUETOOTH",
+    "message": "BLE: FW @ 200",
+    "level": "info"
+  },
+  {
+    "time": "00:00:31",
+    "service": "BLUETOOTH",
+    "message": "BLE: FW @ 200",
+    "level": "info"
+  },
+  {
+    "time": "00:00:34",
+    "service": "BLUETOOTH",
+    "message": "BLE: FW @ 200",
+    "level": "info"
+  },
+  {
+    "time": "00:00:34",
+    "service": "BLUETOOTH",
+    "message": "BLE: FW @ 200",
+    "level": "info"
+  },
+  {
+    "time": "00:00:34",
+    "service": "BLUETOOTH",
+    "message": "BLE: FW @ 200",
+    "level": "info"
+  },
+  {
+    "time": "00:00:37",
+    "service": "BLUETOOTH",
+    "message": "BLE: BW @ 200",
+    "level": "info"
+  },
+  {
+    "time": "00:00:38",
+    "service": "BLUETOOTH",
+    "message": "BLE: BW @ 200",
+    "level": "info"
+  },
+  {
+    "time": "00:00:38",
+    "service": "BLUETOOTH",
+    "message": "BLE: TL @ 230",
+    "level": "info"
+  },
+  {
+    "time": "00:00:39",
+    "service": "BLUETOOTH",
+    "message": "BLE: TL @ 230",
+    "level": "info"
+  },
+  {
+    "time": "00:00:39",
+    "service": "BLUETOOTH",
+    "message": "BLE: TR @ 230",
+    "level": "info"
+  },
+  {
+    "time": "00:00:39",
+    "service": "BLUETOOTH",
+    "message": "BLE: TR @ 230",
+    "level": "info"
+  },
+  {
+    "time": "00:00:48",
+    "service": "BLUETOOTH",
+    "message": "BLE: FW @ 200",
+    "level": "info"
+  },
+  {
+    "time": "00:00:48",
+    "service": "BLUETOOTH",
+    "message": "BLE: FW @ 200",
+    "level": "info"
+  },
+  {
+    "time": "00:00:50",
+    "service": "BLUETOOTH",
+    "message": "BLE: TL @ 230",
+    "level": "info"
+  },
+  {
+    "time": "00:00:50",
+    "service": "BLUETOOTH",
+    "message": "BLE: TL @ 230",
+    "level": "info"
+  },
+  {
+    "time": "00:00:50",
+    "service": "BLUETOOTH",
+    "message": "BLE: TR @ 230",
+    "level": "info"
+  },
+  {
+    "time": "00:00:51",
+    "service": "BLUETOOTH",
+    "message": "BLE: TR @ 230",
+    "level": "info"
+  },
+  {
+    "time": "00:00:52",
+    "service": "BLUETOOTH",
+    "message": "BLE: BW @ 200",
+    "level": "info"
+  },
+  {
+    "time": "00:01:05",
+    "service": "BLUETOOTH",
+    "message": "Thiết bị ('DC:E5:5B:11:86:3E', 1) đã kết nối",
+    "level": "info"
+  },
+  {
+    "time": "00:01:08",
+    "service": "BLUETOOTH",
+    "message": "BLE: FW @ 200",
+    "level": "info"
+  },
+  {
+    "time": "00:01:08",
+    "service": "BLUETOOTH",
+    "message": "BLE: FW @ 200",
+    "level": "info"
+  },
+  {
+    "time": "00:01:08",
+    "service": "BLUETOOTH",
+    "message": "BLE: FW @ 200",
+    "level": "info"
+  },
+  {
+    "time": "00:01:09",
+    "service": "BLUETOOTH",
+    "message": "BLE: FW @ 200",
+    "level": "info"
+  },
+  {
+    "time": "00:01:11",
+    "service": "BLUETOOTH",
+    "message": "BLE: TL @ 230",
+    "level": "info"
+  },
+  {
+    "time": "00:01:11",
+    "service": "BLUETOOTH",
+    "message": "BLE: TL @ 230",
+    "level": "info"
+  },
+  {
+    "time": "00:01:12",
+    "service": "BLUETOOTH",
+    "message": "BLE: TR @ 230",
+    "level": "info"
+  },
+  {
+    "time": "00:01:12",
+    "service": "BLUETOOTH",
+    "message": "BLE: TR @ 230",
+    "level": "info"
+  },
+  {
+    "time": "00:01:13",
+    "service": "BLUETOOTH",
+    "message": "BLE: TL @ 230",
+    "level": "info"
+  },
+  {
+    "time": "00:01:13",
+    "service": "BLUETOOTH",
+    "message": "BLE: TL @ 230",
+    "level": "info"
+  },
+  {
+    "time": "00:01:14",
+    "service": "BLUETOOTH",
+    "message": "BLE: BW @ 200",
+    "level": "info"
+  },
+  {
+    "time": "00:01:14",
+    "service": "BLUETOOTH",
+    "message": "BLE: BW @ 200",
+    "level": "info"
+  },
+  {
+    "time": "00:01:16",
+    "service": "BLUETOOTH",
+    "message": "BLE: FW @ 200",
+    "level": "info"
+  },
+  {
+    "time": "00:01:16",
+    "service": "BLUETOOTH",
+    "message": "BLE: FW @ 200",
+    "level": "info"
+  },
+  {
+    "time": "00:01:18",
+    "service": "BLUETOOTH",
+    "message": "BLE: FW @ 200",
+    "level": "info"
+  },
+  {
+    "time": "00:01:20",
+    "service": "BLUETOOTH",
+    "message": "BLE: FW @ 200",
+    "level": "info"
+  },
+  {
+    "time": "00:01:21",
+    "service": "BLUETOOTH",
+    "message": "BLE: FW @ 200",
+    "level": "info"
+  },
+  {
+    "time": "00:02:25",
+    "service": "BLUETOOTH",
+    "message": "BT Server chạy tại D8:3A:DD:A8:20:05",
+    "level": "info"
+  },
+  {
+    "time": "11:34:22",
+    "service": "BLUETOOTH",
+    "message": "BT Server chạy tại D8:3A:DD:A8:20:05",
+    "level": "info"
+  },
+  {
+    "time": "12:40:34",
+    "service": "BLUETOOTH",
+    "message": "BT Server chạy tại D8:3A:DD:A8:20:05",
+    "level": "info"
+  },
+  {
+    "time": "14:01:20",
+    "service": "BLUETOOTH",
+    "message": "BT Server chạy tại D8:3A:DD:A8:20:05",
+    "level": "info"
+  },
+  {
+    "time": "20:00:41",
+    "service": "TRACKING",
+    "message": "Đã bật dịch vụ TRACKING",
+    "level": "info"
+  },
+  {
+    "time": "20:00:45",
+    "service": "TRACKING",
+    "message": "Đã tắt dịch vụ TRACKING",
+    "level": "info"
+  },
+  {
+    "time": "20:07:56",
+    "service": "BLUETOOTH",
+    "message": "BT Server chạy tại D8:3A:DD:A8:20:05",
+    "level": "info"
+  },
+  {
+    "time": "20:17:19",
+    "service": "SOUND",
+    "message": "Đã bật dịch vụ SOUND",
+    "level": "info"
+  },
+  {
+    "time": "20:17:20",
+    "service": "MIC",
+    "message": "Đã bật dịch vụ MIC",
+    "level": "info"
+  },
+  {
+    "time": "20:18:13",
+    "service": "MIC",
+    "message": "Đã tắt dịch vụ MIC",
+    "level": "info"
+  },
+  {
+    "time": "20:18:14",
+    "service": "SOUND",
+    "message": "Đã tắt dịch vụ SOUND",
+    "level": "info"
+  },
+  {
+    "time": "20:22:28",
+    "service": "TRACKING",
+    "message": "Đã bật dịch vụ TRACKING",
+    "level": "info"
+  },
+  {
+    "time": "23:31:47",
+    "service": "BLUETOOTH",
+    "message": "BT Server chạy tại D8:3A:DD:A8:20:05",
+    "level": "info"
+  },
+  {
+    "time": "23:41:14",
+    "service": "BLUETOOTH",
+    "message": "BT Server chạy tại D8:3A:DD:A8:20:05",
+    "level": "info"
+  },
+  {
+    "time": "23:52:02",
+    "service": "BLUETOOTH",
+    "message": "BT Server chạy tại D8:3A:DD:A8:20:05",
+    "level": "info"
+  },
+  {
+    "time": "23:53:24",
+    "service": "BLUETOOTH",
+    "message": "BT Server chạy tại D8:3A:DD:A8:20:05",
+    "level": "info"
+  },
+  {
+    "time": "00:14:05",
+    "service": "BLUETOOTH",
+    "message": "BT Server chạy tại D8:3A:DD:A8:20:05",
+    "level": "info"
+  },
+  {
+    "time": "00:15:36",
+    "service": "BLUETOOTH",
+    "message": "BT Server chạy tại D8:3A:DD:A8:20:05",
+    "level": "info"
+  },
+  {
+    "time": "00:25:18",
+    "service": "BLUETOOTH",
+    "message": "BT Server chạy tại D8:3A:DD:A8:20:05",
+    "level": "info"
+  },
+  {
+    "time": "00:33:40",
+    "service": "BLUETOOTH",
+    "message": "BT Server chạy tại D8:3A:DD:A8:20:05",
+    "level": "info"
+  },
+  {
+    "time": "00:40:42",
+    "service": "TRACKING",
+    "message": "Đã tắt dịch vụ TRACKING",
+    "level": "info"
+  },
+  {
+    "time": "00:40:45",
+    "service": "TRACKING",
+    "message": "Đã bật dịch vụ TRACKING",
+    "level": "info"
+  },
+  {
+    "time": "11:02:03",
+    "service": "BLUETOOTH",
+    "message": "BT Server chạy tại D8:3A:DD:A8:20:05",
+    "level": "info"
+  },
+  {
+    "time": "15:40:49",
+    "service": "BLUETOOTH",
+    "message": "BT Server chạy tại D8:3A:DD:A8:20:05",
+    "level": "info"
+  },
+  {
+    "time": "20:42:18",
+    "service": "BLUETOOTH",
+    "message": "BT Server chạy tại D8:3A:DD:A8:20:05",
+    "level": "info"
+  },
+  {
+    "time": "19:22:53",
+    "service": "BLUETOOTH",
+    "message": "BT Server chạy tại D8:3A:DD:A8:20:05",
+    "level": "info"
+  },
+  {
+    "time": "20:15:02",
+    "service": "BLUETOOTH",
+    "message": "BT Server chạy tại D8:3A:DD:A8:20:05",
+    "level": "info"
+  },
+  {
+    "time": "20:15:03",
+    "service": "TRACKING",
+    "message": "Đã tắt dịch vụ TRACKING",
+    "level": "info"
+  },
+  {
+    "time": "20:15:04",
+    "service": "TRACKING",
+    "message": "Đã bật dịch vụ TRACKING",
+    "level": "info"
+  },
+  {
+    "time": "20:19:20",
+    "service": "BLUETOOTH",
+    "message": "BT Server chạy tại D8:3A:DD:A8:20:05",
+    "level": "info"
+  },
+  {
+    "time": "20:21:07",
+    "service": "BLUETOOTH",
+    "message": "BT Server chạy tại D8:3A:DD:A8:20:05",
+    "level": "info"
+  },
+  {
+    "time": "20:33:03",
+    "service": "BLUETOOTH",
+    "message": "BT Server chạy tại D8:3A:DD:A8:20:05",
+    "level": "info"
+  },
+  {
+    "time": "20:33:51",
+    "service": "BLUETOOTH",
+    "message": "BT Server chạy tại D8:3A:DD:A8:20:05",
+    "level": "info"
+  },
+  {
+    "time": "20:44:32",
+    "service": "BLUETOOTH",
+    "message": "BT Server chạy tại D8:3A:DD:A8:20:05",
+    "level": "info"
+  },
+  {
+    "time": "20:54:54",
+    "service": "BLUETOOTH",
+    "message": "BT Server chạy tại D8:3A:DD:A8:20:05",
+    "level": "info"
+  },
+  {
+    "time": "20:57:27",
+    "service": "BLUETOOTH",
+    "message": "BT Server chạy tại D8:3A:DD:A8:20:05",
+    "level": "info"
+  },
+  {
+    "time": "22:34:29",
+    "service": "BLUETOOTH",
+    "message": "BT Server chạy tại D8:3A:DD:A8:20:05",
+    "level": "info"
+  },
+  {
+    "time": "22:36:59",
+    "service": "BLUETOOTH",
+    "message": "BT Server chạy tại D8:3A:DD:A8:20:05",
+    "level": "info"
+  },
+  {
+    "time": "23:31:32",
+    "service": "BLUETOOTH",
+    "message": "BT Server chạy tại D8:3A:DD:A8:20:05",
+    "level": "info"
+  },
+  {
+    "time": "14:04:50",
+    "service": "BLUETOOTH",
+    "message": "BT Server chạy tại D8:3A:DD:A8:20:05",
+    "level": "info"
+  },
+  {
+    "time": "14:37:21",
+    "service": "BLUETOOTH",
+    "message": "BT Server chạy tại D8:3A:DD:A8:20:05",
+    "level": "info"
+  },
+  {
+    "time": "14:39:20",
+    "service": "TRACKING",
+    "message": "Đã tắt dịch vụ TRACKING",
+    "level": "info"
+  },
+  {
+    "time": "14:39:22",
+    "service": "TRACKING",
+    "message": "Đã bật dịch vụ TRACKING",
+    "level": "info"
+  },
+  {
+    "time": "14:56:56",
+    "service": "BLUETOOTH",
+    "message": "BT Server chạy tại D8:3A:DD:A8:20:05",
+    "level": "info"
+  },
+  {
+    "time": "14:57:21",
+    "service": "TRACKING",
+    "message": "Đã tắt dịch vụ TRACKING",
+    "level": "info"
+  },
+  {
+    "time": "14:57:27",
+    "service": "CAMERA",
+    "message": "Đã tắt dịch vụ CAMERA",
+    "level": "info"
+  },
+  {
+    "time": "15:02:44",
+    "service": "BLUETOOTH",
+    "message": "BT Server chạy tại D8:3A:DD:A8:20:05",
+    "level": "info"
+  },
+  {
+    "time": "15:03:06",
+    "service": "CAMERA",
+    "message": "Đã bật dịch vụ CAMERA",
+    "level": "info"
+  },
+  {
+    "time": "15:03:08",
+    "service": "MIC",
+    "message": "Đã bật dịch vụ MIC",
+    "level": "info"
+  },
+  {
+    "time": "15:03:08",
+    "service": "SOUND",
+    "message": "Đã bật dịch vụ SOUND",
+    "level": "info"
+  },
+  {
+    "time": "15:03:31",
+    "service": "BLUETOOTH",
+    "message": "BT Server chạy tại D8:3A:DD:A8:20:05",
+    "level": "info"
+  },
+  {
+    "time": "20:25:28",
+    "service": "BLUETOOTH",
+    "message": "BT Server chạy tại D8:3A:DD:A8:20:05",
+    "level": "info"
+  },
+  {
+    "time": "20:25:41",
+    "service": "MIC",
+    "message": "Đã tắt dịch vụ MIC",
+    "level": "info"
+  },
+  {
+    "time": "20:25:42",
+    "service": "SOUND",
+    "message": "Đã tắt dịch vụ SOUND",
+    "level": "info"
+  }
+]
