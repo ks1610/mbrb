@@ -29,7 +29,7 @@ python3 webapp.py
 Run this command to activate the main application, including robot control logic, voice processing, and hardware communication.
 
 ``` bash
-python3 app.py
+python3 main.py
 ```
 
 ### 1.4 Deactivate Environment
