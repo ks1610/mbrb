@@ -63,7 +63,7 @@ Image source: https://randomnerdtutorials.com/raspberry-pi-pinout-gpios/
 | OUT+               | +USBc power supply   |
 | OUT-               | -USBc power supply   |
 ## Core:
-* AI Model: local ai from olama with model Gemini 2.5 Flash
+* AI Model: AI model with Gemini 2.5 Flash API
 * Devices Communication Protocol: MQTT
 
 ## Result:
