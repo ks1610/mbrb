@@ -63,7 +63,7 @@ Image source: https://randomnerdtutorials.com/raspberry-pi-pinout-gpios/
 | OUT+               | +USBc power supply   |
 | OUT-               | -USBc power supply   |
 ## Core:
-* AI Model: local ai from olama with modek qwen2.5, version: 1.5b
+* AI Model: local ai from olama with model Gemini 2.5 Flash
 * Devices Communication Protocol: MQTT
 
 ## Result:
@@ -72,7 +72,8 @@ Image source: https://randomnerdtutorials.com/raspberry-pi-pinout-gpios/
 * Week3 (start: 1/19/2026): Complete the hardware assembly, web server control interface and imtegrate cammera with raspberrypi.
 * Week4 (start: 1/26/2026): Updated motors moving control and combine camera tracking with motors 
 * Week5 (start: 2/2/2026): Updated system start automantically when rasperrypi turned on and remember system log for control page
-* Week6 (start: 2/8/2026): Updated feature car remote over bluetooth protocol 
+* Week6 (start: 2/8/2026): Updated feature car remote over bluetooth protocol
+* Week7 (start: 2/15/2026): Integrated face recognition with OpenCV and temporary switched back AI model from qwen2.5 to Gemini 2.5 Flash
 
 ## About to update:
 * Face recognition and Robot interaction
