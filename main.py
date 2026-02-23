@@ -5,6 +5,7 @@ import sys
 import os
 from dotenv import load_dotenv
 import ollama
+import google.generativeai as genai
 
 load_dotenv()
 
@@ -14,7 +15,7 @@ sys.path.append(ASSET_DIR)
 
 import globals
 from system_logs import load_system_config, load_system_logs, add_system_log
-from ai_module import speak, listen, check_info_request, analyze_command_similarity, LOCAL_MODEL, SYS_INSTRUCT_BASE
+from ai_module import speak, listen, analyze_command_similarity, LOCAL_MODEL, SYS_INSTRUCT_BASE, GEMINI_API_KEY
 from camera_tracking import camera_thread
 from bluetooth_server import bluetooth_server_thread
 from routes import app
@@ -70,44 +71,59 @@ async def main_loop():
             # 1) Device control via language
             cmd = analyze_command_similarity(user_input)
             if cmd:
-                device_id, cmd_state = cmd
-                try:
-                    # MQTT publish (paho is thread-safe for publish)
-                    mqtt_client.publish(TOPIC_CMD, f"{device_id}:{cmd_state}")
-                    add_system_log(f"Gửi lệnh MQTT: Thiết bị {device_id} -> {cmd_state.upper()}", "info", "MQTT_CMD")
-                except Exception as e:
-                    print(f"MQTT publish error: {e}")
+                if cmd["type"] == "info":
+                    await speak(cmd["data"])
+                    continue
+                elif cmd["type"] == "command":
+                    device_id, cmd_state = cmd
+                    try:
+                        # MQTT publish (paho is thread-safe for publish)
+                        mqtt_client.publish(TOPIC_CMD, f"{device_id}:{cmd_state}")
+                        add_system_log(f"Gửi lệnh MQTT: Thiết bị {device_id} -> {cmd_state.upper()}", "info", "MQTT_CMD")
+                    except Exception as e:
+                        print(f"MQTT publish error: {e}")
 
-                action_vn = 'bật' if cmd_state == 'on' else 'tắt'
-                await speak(f"Đã {action_vn} đèn {device_id}!")
-                continue
-
-            # 2) Info requests (time/weather)
-            info = check_info_request(user_input)
-            if info:
-                await speak(info)
-                continue
+                    action_vn = 'bật' if cmd_state == 'on' else 'tắt'
+                    await speak(f"Đã {action_vn} đèn {device_id}!")
+                    continue
 
             # 3) AI conversation (ollama.chat is blocking => run in executor)
             if globals.SYSTEM_CONFIG.get("ai", True):
                 try:
-                    res = await loop.run_in_executor(None, lambda: ollama.chat(
-                        model=LOCAL_MODEL,
-                        messages=[
-                            {'role': 'system', 'content': SYS_INSTRUCT_BASE},
-                            {'role': 'user', 'content': user_input}
-                        ]
-                    ))
-                    # extract text robustly
-                    ai_text = None
+                    # res = await loop.run_in_executor(None, lambda: ollama.chat(
+                    #     model=LOCAL_MODEL,
+                    #     messages=[
+                    #         {'role': 'system', 'content': SYS_INSTRUCT_BASE},
+                    #         {'role': 'user', 'content': user_input}
+                    #     ]
+                    # ))
+                    # # extract text robustly
+                    # ai_text = None
+                    # try:
+                    #     ai_text = res['message']['content']
+                    # except Exception:
+                    #     if isinstance(res, str):
+                    #         ai_text = res
+                    #     elif isinstance(res, dict) and 'content' in res:
+                    #         ai_text = res['content']
+                    # if ai_text:
+                    #     await speak(ai_text)
                     try:
-                        ai_text = res['message']['content']
-                    except Exception:
-                        if isinstance(res, str):
-                            ai_text = res
-                        elif isinstance(res, dict) and 'content' in res:
-                            ai_text = res['content']
+                        genai.configure(api_key=GEMINI_API_KEY)
+                        model = genai.GenerativeModel('gemini-2.5-flash', system_instruction=SYS_INSTRUCT_BASE)
+                        print(">>> AI đã sẵn sàng phân loại lệnh!")
+                    except Exception as e:
+                        print(f"Lỗi AI: {e}")
+                    # Hàm gọi Gemini để chạy trong executor
+                    def call_gemini(prompt):
+                        response = model.generate_content(prompt)
+                        return response.text
+
+                    # Chạy blocking API call trong thread riêng để tránh lag main loop
+                    ai_text = await loop.run_in_executor(None, call_gemini, user_input)
+
                     if ai_text:
+                        print(f"🤖: {ai_text}")
                         await speak(ai_text)
                 except Exception as e:
                     print(f"AI chat error: {e}")

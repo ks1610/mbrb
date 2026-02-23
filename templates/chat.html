@@ -20,23 +20,18 @@
     <div class="message bot welcome-message" data-time="Vừa xong">
       <div class="bubble">
         <strong>Chào anh!</strong> 👋<br><br>
-        Em là Hanah - trợ lý ảo hệ thống IoT của anh. Em có thể giúp anh:<br>
-        • Điều khiển thiết bị (bật/tắt)<br>
-        • Kiểm tra trạng thái thiết bị<br>
-        • Hỗ trợ kỹ thuật<br>
-        • Cung cấp thông tin hệ thống<br><br>
-        Anh cần em giúp gì không ạ?
+        Tôi là Hanah - trợ lý ảo hệ thống IoT
       </div>
     </div>
-    <div class="chat-input-area">
-      <input type="text" id="userInput" placeholder="Nhập tin nhắn của bạn..." autocomplete="off">
-      <button onclick="sendMessage()" id="sendButton">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
-        </svg>
-        Gửi
-      </button>
-    </div>
+  </div>
+  <div class="chat-input-area">
+    <input type="text" id="userInput" placeholder="Nhập tin nhắn của bạn..." autocomplete="off">
+    <button onclick="sendMessage()" id="sendButton">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
+      </svg>
+      Gửi
+    </button>
   </div>
 
   <script>
@@ -129,7 +124,7 @@
       } catch (e) {
         console.error('Error:', e);
         typingIndicator.remove();
-        addMessage("❌ Lỗi kết nối rồi anh ơi. Vui lòng thử lại sau hoặc kiểm tra kết nối mạng.", 'bot');
+        addMessage("❌ Lỗi kết nối. Vui lòng thử lại sau hoặc kiểm tra kết nối mạng.", 'bot');
         
         // Show error notification
         showNotification('Lỗi kết nối', 'Không thể kết nối đến máy chủ. Vui lòng thử lại.');
@@ -209,6 +204,31 @@
         <div class="suggestion">Tắt tất cả thiết bị</div>
       `;
       // You can implement this based on your needs
+    }
+    // Gọi hàm này khi trang web tải xong (DOMContentLoaded)
+    document.addEventListener("DOMContentLoaded", function() {
+        loadChatHistory();
+    });
+
+    function loadChatHistory() {
+      fetch('/api/chat/history')
+        .then(response => response.json())
+        .then(data => {
+            if (data.history && data.history.length > 0) {
+                data.history.forEach(chat => {
+                    let timeStr = null;
+                    if (chat.timestamp) {
+                        try {
+                            timeStr = chat.timestamp.split(' ')[1].substring(0, 5);
+                        } catch(e) {}
+                    }
+                    addMessage(chat.content, chat.role, timeStr);
+                });
+                // Đợi render xong rồi cuộn xuống cuối
+                setTimeout(scrollToBottom, 100); 
+            }
+        })
+        .catch(error => console.error("Lỗi khi tải lịch sử chat:", error));
     }
   </script>
 </body>
