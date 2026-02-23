@@ -90,8 +90,8 @@ WEB_PASSWORD = os.getenv('WEB_PASSWORD', '1')
 PID_KP_ROTATION = 0.5
 
 # File Paths
-PROTOTXT_PATH = "deploy.prototxt"
-MODEL_PATH = "res10_300x300_ssd_iter_140000.caffemodel"
+# PROTOTXT_PATH = "deploy.prototxt"
+# MODEL_PATH = "res10_300x300_ssd_iter_140000.caffemodel"
 
 
 # ==========================================
@@ -257,14 +257,14 @@ def _play_wav_blocking(path):
 # DNN MODEL INITIALIZATION
 # ==========================================
 
-net = None
-try:
-    net = cv2.dnn.readNetFromCaffe(PROTOTXT_PATH, MODEL_PATH)
-    net.setPreferableBackend(cv2.dnn.DNN_BACKEND_OPENCV)
-    net.setPreferableTarget(cv2.dnn.DNN_TARGET_CPU)
-    print("✅ Đã tải model nhận diện khuôn mặt DNN.")
-except Exception as e:
-    print(f"❌ Lỗi DNN: {e}. Camera vẫn sẽ chạy nhưng không Tracking được.")
+# net = None
+# try:
+#     net = cv2.dnn.readNetFromCaffe(PROTOTXT_PATH, MODEL_PATH)
+#     net.setPreferableBackend(cv2.dnn.DNN_BACKEND_OPENCV)
+#     net.setPreferableTarget(cv2.dnn.DNN_TARGET_CPU)
+#     print("✅ Đã tải model nhận diện khuôn mặt DNN.")
+# except Exception as e:
+#     print(f"❌ Lỗi DNN: {e}. Camera vẫn sẽ chạy nhưng không Tracking được.")
 
 
 # ==========================================
@@ -355,34 +355,26 @@ robot = RobotSerial()
 # ==========================================
 
 def process_tracking_pid(frame):
-    """Process face detection and PID control for tracking"""
-    if not SYSTEM_CONFIG["tracking"] or net is None:
+    if not SYSTEM_CONFIG["tracking"]:
         return
     (h, w) = frame.shape[:2]
     
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
-    # Create blob for DNN
-    blob = cv2.dnn.blobFromImage(
-        cv2.resize(frame, (300, 300)),
-        1.0,
-        (300, 300),
-        (104.0, 177.0, 123.0)
+    faces = facedetect.detectMultiScale(
+        gray, 
+        scaleFactor=1.2, 
+        minNeighbors=5, 
+        minSize=(30, 30)
     )
-    
-    net.setInput(blob)
-    detections = net.forward()
-    
-    # Find best detection
     best_box = None
-    max_conf = 0
+    max_area = 0
     
-    for i in range(detections.shape[2]):
-        conf = detections[0, 0, i, 2]
-        if conf > 0.5 and conf > max_conf:
-            max_conf = conf
-            box = detections[0, 0, i, 3:7] * np.array([w, h, w, h])
-            best_box = box.astype("int")
+    for (x, y, w_face, h_face) in faces:
+        area = w_face * h_face
+        if area > max_area:
+            max_area = area
+            best_box = (x, y, x + w_face, y + h_face) # (startX, startY, endX, endY)
     
     if best_box is not None:
         (startX, startY, endX, endY) = best_box
@@ -397,12 +389,11 @@ def process_tracking_pid(frame):
             robot.send(cmd, turn_speed, 60, force=True)
             cv2.putText(frame, f"PID {cmd}", (10, 60), 1, 1, (0, 255, 0), 2)
         
-        # --- BẢO VỆ CHỐNG CRASH KHI MẶT CHẠM VIỀN ---
         startX, startY = max(0, startX), max(0, startY)
         endX, endY = min(w, endX), min(h, endY)
         
         try:
-            # Cắt khuôn mặt từ ảnh xám dựa trên tọa độ DNN
+            # Cắt khuôn mặt từ ảnh xám
             face_roi = gray[startY:endY, startX:endX]
             
             # Chỉ nhận diện nếu vùng cắt hợp lệ (không bị rỗng)
@@ -418,41 +409,33 @@ def process_tracking_pid(frame):
                     color = (0, 0, 255)  # Đỏ cho người lạ
 
                 # --- LOGIC HIỂN THỊ LABEL DYNAMICALLY ---
-                
-                # 1. Tính toán kích thước khối Text để làm nền chuẩn xác
                 text_size, _ = cv2.getTextSize(name, cv2.FONT_HERSHEY_SIMPLEX, 0.6, 2)
                 text_w = text_size[0]
                 label_h = 30  # Chiều cao cố định của khung label
                 
-                # 2. Đặt tọa độ mặc định (Nằm bên trên frame)
                 bg_x = startX
                 bg_y = startY - label_h
                 
-                # 3. Tính toán va chạm viền (ưu tiên Trái/Phải trước)
-                if startX < 30:  # Chạm cạnh trái -> Ném label sang phải frame
+                # Va chạm viền
+                if startX < 30:
                     bg_x = endX
                     bg_y = startY
-                elif endX > w - text_w - 10:  # Chạm cạnh phải -> Ném label sang trái frame
+                elif endX > w - text_w - 10:
                     bg_x = startX - text_w - 10
                     bg_y = startY
-                elif startY < label_h:  # Chạm cạnh trên -> Ném label xuống dưới frame
+                elif startY < label_h:
                     bg_x = startX
                     bg_y = endY
-                elif endY > h - label_h:  # Chạm cạnh dưới -> Giữ nguyên bên trên
+                elif endY > h - label_h:
                     bg_x = startX
                     bg_y = startY - label_h
                 
-                # 4. Bẫy lỗi an toàn: Không cho label rớt ra khỏi góc màn hình
                 bg_x = max(0, min(bg_x, w - text_w - 10))
                 bg_y = max(0, min(bg_y, h - label_h))
 
-                # Vẽ Box khuôn mặt
+                # Vẽ Box
                 cv2.rectangle(frame, (startX, startY), (endX, endY), color, 2)
-                
-                # Vẽ Box nền cho chữ (sử dụng tọa độ bg_x, bg_y đã tính)
                 cv2.rectangle(frame, (bg_x, bg_y), (bg_x + text_w + 10, bg_y + label_h), color, -1)
-                
-                # In chữ vào giữa nền
                 cv2.putText(frame, name, (bg_x + 5, bg_y + 22), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2)
                 
         except Exception as e:
@@ -716,7 +699,6 @@ def check_info_request(user_text):
 # ==========================================
 
 def analyze_command_similarity(user_text):
-    """Analyze device control commands (lights)"""
     t = user_text.lower()
     
     # Check if command contains both action and device number
@@ -966,6 +948,34 @@ def video_feed():
         generate(),
         mimetype='multipart/x-mixed-replace; boundary=frame'
     )
+
+@app.route('/api/chat', methods=['POST'])
+def api_chat():
+    if not session.get('logged_in'): return jsonify({"error": "Unauthorized"}), 401
+    msg = request.json.get("message", "")
+    cmd = analyze_command_similarity(msg)
+    if cmd:
+        if cmd[0] == "TRACKING": return jsonify({"reply": f"Ok, chế độ bám theo đã {cmd[1]}."})
+        try:
+            # Dùng mqtt_client đã khởi tạo sẵn thay vì publish.single
+            mqtt_client.publish(TOPIC_CMD, f"{cmd[0]}:{cmd[1]}")
+            
+            # Dịch trạng thái sang tiếng Việt cho câu trả lời tự nhiên
+            action_vn = "bật" if cmd[1] == "on" else "tắt"
+            add_system_log(f"Web Chat: Lệnh MQTT: Thiết bị {cmd[0]} -> {cmd[1].upper()}", "info", "MQTT_CMD")
+            
+            return jsonify({"reply": f"Dạ, em đã {action_vn} đèn {cmd[0]} rồi ạ."})
+        except Exception as e:
+            print(f"Lỗi gửi MQTT từ Web Chat: {e}")
+            return jsonify({"reply": "Xin lỗi anh, em gặp lỗi khi gửi lệnh đến công tắc ạ."})
+        # ------------------------
+    
+    if SYSTEM_CONFIG["ai"]:
+        try:
+            res = ollama.chat(model=LOCAL_MODEL, messages=[{'role':'system','content':SYS_INSTRUCT_BASE},{'role':'user','content':msg}])
+            return jsonify({"reply": res['message']['content']})
+        except: return jsonify({"reply": "Lỗi AI."})
+    return jsonify({"reply": "AI đang tắt."})
 
 
 @app.route('/api/system-stats')
