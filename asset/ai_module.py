@@ -10,6 +10,9 @@ import speech_recognition as sr
 import requests
 import os
 from datetime import datetime
+import xml.etree.ElementTree as ET
+import google.generativeai as genai
+
 import globals
 from globals import BASE_DIR, CONFIG_FILE, LOG_FILE, file_lock, STOP_EVENT
 from difflib import SequenceMatcher
@@ -18,6 +21,7 @@ from gpiozero import OutputDevice
 
 # AI Configuration
 LOCAL_MODEL = "qwen2.5:1.5b"
+GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
 MIC_DEVICE_INDEX = 0
 AMP_PIN = 4
 SIMILARITY_THRESHOLD = 0.1
@@ -183,7 +187,7 @@ def listen():
         return None
 
 # ==========================================
-# WEATHER & INFO FUNCTIONS
+# WEATHER & NEWS FUNCTIONS
 # ==========================================
 
 def get_weather(city):
@@ -209,32 +213,83 @@ def get_weather(city):
         print(f"Lỗi Weather API: {e}")
         return "Mạng bên em đang chậm, em chưa xem được thời tiết ạ."
 
-
-def check_info_request(user_text):
-    """Handle time and weather requests"""
+def get_news(user_text):
     t = user_text.lower()
     
-    # Time request
+    # Tìm xem người dùng muốn nghe chủ đề gì
+    target_url = None
+    target_category = None
+    
+    for category, url in RSS_FEEDS.items():
+        if category in t:
+            target_url = url
+            target_category = category
+            break
+            
+    # Nếu chỉ nói "đọc tin tức" chung chung, mặc định lấy tin Thời sự
+    if not target_url and any(w in t for w in ["tin tức", "đọc báo", "có tin gì"]):
+        target_category = "thời sự"
+        target_url = RSS_FEEDS["thời sự"]
+        
+    if not target_url:
+        return None # Không phải lệnh đọc tin tức
+
+    try:
+        # Dùng header để tránh bị server chặn
+        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}
+        response = requests.get(target_url, headers=headers, timeout=5)
+        response.raise_for_status()
+        
+        # Parse XML
+        root = ET.fromstring(response.content)
+        items = root.findall('.//channel/item')
+        
+        if not items:
+            return f"Dạ, hiện tại em chưa tìm thấy tin tức mới nào trong mục {target_category} ạ."
+        
+        # Lấy 3 tin mới nhất
+        news_titles = []
+        for i in range(min(3, len(items))):
+            title = items[i].find('title')
+            if title is not None and title.text:
+                news_titles.append(title.text.strip())
+        
+        # Nối thành câu nói tự nhiên cho Hanah
+        news_str = f"Sau đây là 3 tin tức {target_category} mới nhất. " + ". ".join(news_titles) + "."
+        return news_str
+        
+    except Exception as e:
+        print(f"Lỗi đọc RSS: {e}")
+        return "Dạ, mạng bên em đang hơi chập chờn nên chưa lấy được tin tức ạ."
+
+# ==========================================
+# Handle Request FUNCTIONS
+# ==========================================
+def analyze_command_similarity(user_text):
+    """Analyze device control commands (lights)"""
+    t = user_text.lower()
+    
+    # 1. Kiểm tra yêu cầu thời gian
     if any(w in t for w in ["mấy giờ", "thời gian", "giờ rồi"]):
         now = datetime.now()
-        return f"Dạ, bây giờ là {now.hour} giờ {now.minute} phút ạ."
+        return {"type": "info", "data": f"Dạ, bây giờ là {now.hour} giờ {now.minute} phút ạ."}
     
-    # Weather request
+    # 2. Kiểm tra yêu cầu thời tiết
     if "thời tiết" in t:
         match = re.search(r"thời tiết (?:tại|ở|khu vực)?\s*([\w\s]+)", t)
         if match:
             city_name = match.group(1).strip()
             if not city_name or city_name in ["nhỉ", "thế nào", "sao"]:
                 city_name = "Hanoi"
-            return get_weather(city_name)
-        return get_weather("Hanoi")
+            return {"type": "info", "data": get_weather(city_name)}
+        return {"type": "info", "data": get_weather("Hanoi")}
     
-    return None
+    # 3. Kiểm tra yêu cầu đọc tin tức
+    if any(w in t for w in ["tin tức", "đọc báo", "có tin gì"]):
+        news_response = get_news(user_text)
+        if news_response:
+            return {"type": "info", "data": news_response}
 
-def analyze_command_similarity(user_text):
-    """Analyze device control commands (lights)"""
-    t = user_text.lower()
-    
     # Check if command contains both action and device number
     if not (any(w in t for w in ["bật", "tắt"]) and 
             any(w in t for w in ["1", "2", "3", "4"])):
@@ -253,5 +308,7 @@ def analyze_command_similarity(user_text):
             if score > best_score:
                 best_score = score
                 best_cmd = (dev, state)
-    
-    return best_cmd if best_score >= SIMILARITY_THRESHOLD else None
+    if best_score >= SIMILARITY_THRESHOLD and best_cmd:
+            return {"type": "command", "data": best_cmd}
+
+    return None

@@ -12,9 +12,8 @@ PID_KP_ROTATION = 0.5
 
 ROOT_DIR = os.path.dirname(globals.BASE_DIR)
 
-PROTOTXT_PATH = os.path.join(ROOT_DIR, "deploy.prototxt")
-MODEL_PATH = os.path.join(ROOT_DIR, "res10_300x300_ssd_iter_140000.caffemodel")
 CASCADE_PATH = os.path.join(ROOT_DIR, "device-check", "face_recongnize", "haarcascade_frontalface_default.xml")
+facedetect = cv2.CascadeClassifier(CASCADE_PATH)
 TRAINER_PATH = os.path.join(ROOT_DIR, "device-check", "face_recongnize", "Trainer.yml")
 
 name_list = ["Person0", "Person1", "Person2"]
@@ -23,43 +22,27 @@ try:
     recognizer.read(TRAINER_PATH)
 except: pass
 
-net = None
-try:
-    net = cv2.dnn.readNetFromCaffe(PROTOTXT_PATH, MODEL_PATH)
-    net.setPreferableBackend(cv2.dnn.DNN_BACKEND_OPENCV)
-    net.setPreferableTarget(cv2.dnn.DNN_TARGET_CPU)
-except Exception as e:
-    print(f"❌ Lỗi DNN: {e}")
-
 def process_tracking_pid(frame):
-    """Process face detection and PID control for tracking"""
-    if not globals.SYSTEM_CONFIG["tracking"] or net is None:
+    if not SYSTEM_CONFIG["tracking"]:
         return
     (h, w) = frame.shape[:2]
     
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
-    # Create blob for DNN
-    blob = cv2.dnn.blobFromImage(
-        cv2.resize(frame, (300, 300)),
-        1.0,
-        (300, 300),
-        (104.0, 177.0, 123.0)
+    faces = facedetect.detectMultiScale(
+        gray, 
+        scaleFactor=1.2, 
+        minNeighbors=5, 
+        minSize=(30, 30)
     )
-    
-    net.setInput(blob)
-    detections = net.forward()
-    
-    # Find best detection
     best_box = None
-    max_conf = 0
+    max_area = 0
     
-    for i in range(detections.shape[2]):
-        conf = detections[0, 0, i, 2]
-        if conf > 0.5 and conf > max_conf:
-            max_conf = conf
-            box = detections[0, 0, i, 3:7] * np.array([w, h, w, h])
-            best_box = box.astype("int")
+    for (x, y, w_face, h_face) in faces:
+        area = w_face * h_face
+        if area > max_area:
+            max_area = area
+            best_box = (x, y, x + w_face, y + h_face) # (startX, startY, endX, endY)
     
     if best_box is not None:
         (startX, startY, endX, endY) = best_box
@@ -74,12 +57,11 @@ def process_tracking_pid(frame):
             robot.send(cmd, turn_speed, 60, force=True)
             cv2.putText(frame, f"PID {cmd}", (10, 60), 1, 1, (0, 255, 0), 2)
         
-        # --- BẢO VỆ CHỐNG CRASH KHI MẶT CHẠM VIỀN ---
         startX, startY = max(0, startX), max(0, startY)
         endX, endY = min(w, endX), min(h, endY)
         
         try:
-            # Cắt khuôn mặt từ ảnh xám dựa trên tọa độ DNN
+            # Cắt khuôn mặt từ ảnh xám
             face_roi = gray[startY:endY, startX:endX]
             
             # Chỉ nhận diện nếu vùng cắt hợp lệ (không bị rỗng)
@@ -95,41 +77,33 @@ def process_tracking_pid(frame):
                     color = (0, 0, 255)  # Đỏ cho người lạ
 
                 # --- LOGIC HIỂN THỊ LABEL DYNAMICALLY ---
-                
-                # 1. Tính toán kích thước khối Text để làm nền chuẩn xác
                 text_size, _ = cv2.getTextSize(name, cv2.FONT_HERSHEY_SIMPLEX, 0.6, 2)
                 text_w = text_size[0]
                 label_h = 30  # Chiều cao cố định của khung label
                 
-                # 2. Đặt tọa độ mặc định (Nằm bên trên frame)
                 bg_x = startX
                 bg_y = startY - label_h
                 
-                # 3. Tính toán va chạm viền (ưu tiên Trái/Phải trước)
-                if startX < 30:  # Chạm cạnh trái -> Ném label sang phải frame
+                # Va chạm viền
+                if startX < 30:
                     bg_x = endX
                     bg_y = startY
-                elif endX > w - text_w - 10:  # Chạm cạnh phải -> Ném label sang trái frame
+                elif endX > w - text_w - 10:
                     bg_x = startX - text_w - 10
                     bg_y = startY
-                elif startY < label_h:  # Chạm cạnh trên -> Ném label xuống dưới frame
+                elif startY < label_h:
                     bg_x = startX
                     bg_y = endY
-                elif endY > h - label_h:  # Chạm cạnh dưới -> Giữ nguyên bên trên
+                elif endY > h - label_h:
                     bg_x = startX
                     bg_y = startY - label_h
                 
-                # 4. Bẫy lỗi an toàn: Không cho label rớt ra khỏi góc màn hình
                 bg_x = max(0, min(bg_x, w - text_w - 10))
                 bg_y = max(0, min(bg_y, h - label_h))
 
-                # Vẽ Box khuôn mặt
+                # Vẽ Box
                 cv2.rectangle(frame, (startX, startY), (endX, endY), color, 2)
-                
-                # Vẽ Box nền cho chữ (sử dụng tọa độ bg_x, bg_y đã tính)
                 cv2.rectangle(frame, (bg_x, bg_y), (bg_x + text_w + 10, bg_y + label_h), color, -1)
-                
-                # In chữ vào giữa nền
                 cv2.putText(frame, name, (bg_x + 5, bg_y + 22), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2)
                 
         except Exception as e:

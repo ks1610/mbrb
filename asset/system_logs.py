@@ -110,6 +110,41 @@ def get_disk_usage():
     except:
         return 0
 
+def add_chat_log(role, message):
+    """Lưu tin nhắn vào file JSON. role có thể là 'user' hoặc 'bot'"""
+    logs = []
+    # Đọc file cũ nếu có
+    if os.path.exists(globals.CHAT_LOG_FILE):
+        try:
+            with open(globals.CHAT_LOG_FILE, 'r', encoding='utf-8') as f:
+                logs = json.load(f)
+        except Exception:
+            pass
+            
+    # Thêm tin nhắn mới
+    logs.append({
+        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "role": role,
+        "content": message
+    })
+    
+    # Tùy chọn: Chỉ giữ lại 100 tin nhắn gần nhất để file không quá nặng
+    logs = logs[-100:]
+    
+    # Ghi lại vào file
+    with open(globals.CHAT_LOG_FILE, 'w', encoding='utf-8') as f:
+        json.dump(logs, f, ensure_ascii=False, indent=4)
+
+def load_chat_logs():
+    """Đọc toàn bộ lịch sử chat"""
+    if os.path.exists(globals.CHAT_LOG_FILE):
+        try:
+            with open(globals.CHAT_LOG_FILE, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except Exception:
+            return []
+    return []
+
 # System State
 SYSTEM_CONFIG = load_system_config()
 print(f"Loaded Config: {SYSTEM_CONFIG}")

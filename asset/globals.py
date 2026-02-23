@@ -5,6 +5,7 @@ from queue import Queue
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 LOG_FILE = os.path.join(BASE_DIR, "system_logs.json")
 CONFIG_FILE = os.path.join(BASE_DIR, "system_config.json")
+CHAT_LOG_FILE = os.path.join(BASE_DIR, "chat_history.json")
 
 # State & Locks
 file_lock = threading.Lock()
