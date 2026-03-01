@@ -17,6 +17,7 @@ from mqtt_handler import mqtt_client, TOPIC_CMD
 from ai_module import analyze_command_similarity, LOCAL_MODEL, SYS_INSTRUCT_BASE, GEMINI_API_KEY
 import globals
 from globals import BASE_DIR, CONFIG_FILE, LOG_FILE, file_lock, STOP_EVENT
+from routine_manager import parse_and_save_routine, get_all_routines, delete_routine
 
 try:
     from ai_module import _play_wav_blocking
@@ -90,7 +91,6 @@ def camera_page():
         return redirect(url_for('login'))
     return render_template('camera.html')
 
-
 @app.route('/control')
 def control_page():
     """Robot control page"""
@@ -98,6 +98,12 @@ def control_page():
         return redirect(url_for('login'))
     return render_template('control.html')
 
+@app.route('/routine')
+def routine_page():
+    """Routine management page"""
+    if not session.get('logged_in'):
+        return redirect(url_for('login'))
+    return render_template('routine.html')
 
 @app.route('/video_feed')
 def video_feed():
@@ -150,6 +156,24 @@ def video_feed():
         mimetype='multipart/x-mixed-replace; boundary=frame'
     )
 
+@app.route('/api/routines', methods=['GET'])
+def api_get_routines():
+    """API trả về danh sách Routine"""
+    if not session.get('logged_in'):
+        return jsonify({"error": "Unauthorized"}), 401
+    return jsonify(get_all_routines())
+
+@app.route('/api/routines/<path:routine_name>', methods=['DELETE'])
+def api_delete_routine(routine_name):
+    """API xóa Routine"""
+    if not session.get('logged_in'):
+        return jsonify({"error": "Unauthorized"}), 401
+        
+    success = delete_routine(routine_name)
+    if success:
+        add_system_log(f"Web UI: Đã xóa Routine '{routine_name}'", "info", "ROUTINE")
+        return jsonify({"status": "success"})
+    return jsonify({"error": "Không tìm thấy Routine"}), 404
 
 @app.route('/api/system-stats')
 def system_stats():
@@ -172,6 +196,19 @@ def system_stats():
         print(f"Stats Error: {e}")
         return jsonify({"error": "Internal Error"}), 500
 
+def execute_routine_work(work_text):
+    print(f"[ROUTINE EXECUTE] Bắt đầu chạy lệnh: {work_text}")
+    cmd = analyze_command_similarity(work_text)
+    if cmd:
+        device_id, cmd_state = cmd
+        try:
+            mqtt_client.publish(TOPIC_CMD, f"{device_id}:{cmd_state}")
+            add_system_log(f"ROUTINE: Tự động { 'BẬT' if cmd_state=='on' else 'TẮT' } đèn {device_id}", "info", "ROUTINE")
+            print(f"[ROUTINE SUCCESS] Đã gửi lệnh {cmd_state} tới đèn {device_id}")
+        except Exception as e:
+            print(f"[ROUTINE ERROR] Lỗi gửi MQTT: {e}")
+        return
+
 @app.route('/api/chat', methods=['POST'])
 def api_chat():
     if not session.get('logged_in'): 
@@ -184,6 +221,16 @@ def api_chat():
             
         msg = request.json.get("message", "")
         
+        # Xử lý lệnh tạo Routine nếu có tiền tố đặc biệt
+        if msg.startswith("ROUTINE_CREATE:"):
+            clean_msg = msg.replace("ROUTINE_CREATE:", "").strip()
+            add_chat_log("user", clean_msg)
+            
+            # GỌI THUẬT TOÁN BÓC TÁCH
+            success, reply_msg = parse_and_save_routine(clean_msg, execute_routine_work)
+            add_chat_log("bot", reply_msg)
+            return jsonify({"reply": reply_msg})
+
         if msg:
             add_chat_log("user", msg)
         if not msg:

@@ -249,13 +249,13 @@ def get_news(user_text):
         
         # Lấy 3 tin mới nhất
         news_titles = []
-        for i in range(min(3, len(items))):
+        for i in range(min(8, len(items))):
             title = items[i].find('title')
             if title is not None and title.text:
                 news_titles.append(title.text.strip())
         
         # Nối thành câu nói tự nhiên cho Hanah
-        news_str = f"Sau đây là 3 tin tức {target_category} mới nhất. " + ". ".join(news_titles) + "."
+        news_str = f"Sau đây là tin tức {target_category} mới nhất. " + ". ".join(news_titles) + "."
         return news_str
         
     except Exception as e:

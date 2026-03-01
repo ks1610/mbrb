@@ -20,6 +20,8 @@ from camera_tracking import camera_thread
 from bluetooth_server import bluetooth_server_thread
 from routes import app
 from mqtt_handler import mqtt_client, TOPIC_CMD
+from routine_manager import load_and_schedule_all
+from routes import execute_routine_work
 
 print("🔥 NEW VERSION LOADED @", time.strftime("%H:%M:%S"))
 
@@ -41,6 +43,24 @@ def start_camera(delay=3):
             ).start()
             print(">>> 📸 Camera thread started.")
     threading.Thread(target=_start, daemon=True).start()
+
+def execute_routine_work(work_text):
+    """Hệ thống tự giả lập như người dùng đang ra lệnh khi tới giờ Routine"""
+    print(f"Bắt đầu chạy Work: {work_text}")
+    # 1. Thử phân tích lệnh điều khiển đèn trước
+    cmd = analyze_command_similarity(work_text)
+    if cmd:
+        device_id, cmd_state = cmd
+        mqtt_client.publish(TOPIC_CMD, f"{device_id}:{cmd_state}")
+        add_system_log(f"ROUTINE: Gửi lệnh MQTT Thiết bị {device_id} -> {cmd_state.upper()}", "info", "ROUTINE")
+        return
+        
+    # 2. Nếu là hỏi thông tin (thời tiết, tin tức) thì cho Hanah nói
+    info = check_info_request(work_text)
+    if info:
+        # Chạy speak() bất đồng bộ
+        loop = asyncio.get_event_loop()
+        asyncio.run_coroutine_threadsafe(speak(info), loop)
 
 async def main_loop():
     await asyncio.sleep(3)
@@ -136,6 +156,9 @@ async def main_loop():
 if __name__ == "__main__":
     globals.SYSTEM_CONFIG = load_system_config()
     globals.SYSTEM_LOGS = load_system_logs()
+
+    # start routine checker thread
+    load_and_schedule_all(execute_routine_work)
 
     # start async AI loop WITHOUT audio greeting
     threading.Thread(target=run_async_loop, daemon=True).start()
