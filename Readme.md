@@ -77,4 +77,4 @@ Image source: https://randomnerdtutorials.com/raspberry-pi-pinout-gpios/
 * Week8 (start: 2/22/2028): Updated Routine feature to automate devices
 
 ## Plan to update:
-* Add moving for camera with 2 servos 
+* Add moving for camera with 2 servos and create Android mobile app  
