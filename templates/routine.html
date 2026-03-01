@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+
+{% block title %}Routine - Hanah IoT{% endblock %}
+{% block page_title %}System Routine Manager{% endblock %}
+{% block breadcrumb %}Routine{% endblock %}
+
+{% block content %}
+<div class="routine-header">
+  <div class="routine-title-section">
+    <h2 class="routine-main-title">Quản lý Routine</h2>
+    <p class="routine-subtitle">Tự động hóa các tác vụ theo lịch trình</p>
+  </div>
+  <button class="prompt-btn" onclick="window.location.href='/hanah'">
+    <i>⚡</i>
+    <span>Thiết lập routine với prompt</span>
+    <i>→</i>
+  </button>
+</div>
+
+<div class="routine-container" id="routineGrid">
+  <!-- Routines will be loaded here -->
+</div>
+
+<script>
+  function formatRemainingTime(seconds) {
+    if (seconds <= 0) return "Đang thực thi...";
+    const days = Math.floor(seconds / 86400);
+    const hours = Math.floor((seconds % 86400) / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    
+    let res = [];
+    if (days > 0) res.push(`${days} ngày`);
+    if (hours > 0) res.push(`${hours} giờ`);
+    if (minutes > 0 || (days === 0 && hours === 0)) {
+      res.push(`${minutes} phút`);
+    }
+    
+    return res.join(" ");
+  }
+
+  async function loadRoutines() {
+    try {
+      const res = await fetch('/api/routines');
+      const routines = await res.json();
+      const container = document.getElementById('routineGrid');
+      
+      if (routines.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <i>📋</i>
+            <h3>Chưa có Routine nào</h3>
+            <p>Hãy tạo routine đầu tiên để tự động hóa các thiết bị của bạn</p>
+            <button class="prompt-btn" onclick="window.location.href='/hanah'">
+              <i>⚡</i>
+              <span>Tạo routine mới</span>
+            </button>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = '';
+      routines.forEach(r => {
+        const timeRemaining = formatRemainingTime(r.remaining_seconds);
+        const card = document.createElement('div');
+        card.className = 'routine-card';
+        
+        // Format days display
+        const daysDisplay = r.days_display || 'Hàng ngày';
+        
+        card.innerHTML = `
+          <div class="routine-title">${r.name}</div>
+          <button class="delete-btn" onclick="deleteRoutine('${r.name}')" title="Xóa Routine này">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2M10 11v6M14 11v6"/>
+            </svg>
+          </button>
+          <div class="routine-info">
+            <i>🕒</i>
+            <span>${r.time}</span>
+            <span class="days-badge">${daysDisplay}</span>
+          </div>
+          <div class="routine-work">
+            <i>⚡</i>
+            <span>${r.work}</span>
+          </div>
+          <div class="routine-countdown">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <polyline points="12 6 12 12 16 14"/>
+            </svg>
+            <span>Sẽ chạy sau: ${timeRemaining}</span>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    } catch (e) {
+      console.error("Lỗi tải danh sách Routine:", e);
+      const container = document.getElementById('routineGrid');
+      container.innerHTML = `
+        <div class="empty-state">
+          <i>⚠️</i>
+          <h3>Lỗi tải dữ liệu</h3>
+          <p>Không thể kết nối đến server. Vui lòng thử lại sau.</p>
+        </div>
+      `;
+    }
+  }
+
+  async function deleteRoutine(name) {
+    if (!confirm(`Bạn có chắc chắn muốn xóa routine "${name}" không?`)) return;
+    
+    try {
+      const res = await fetch(`/api/routines/${encodeURIComponent(name)}`, {
+        method: 'DELETE'
+      });
+      if (res.ok) {
+        // Show success notification (if you have notification system)
+        loadRoutines();
+      } else {
+        alert("Lỗi khi xóa Routine!");
+      }
+    } catch (e) {
+      console.error("Error:", e);
+      alert("Không thể kết nối đến server!");
+    }
+  }
+
+  // Load routines when page loads
+  document.addEventListener('DOMContentLoaded', loadRoutines);
+
+  // Auto-refresh every 60 seconds
+  setInterval(loadRoutines, 60000);
+</script>
+{% endblock %}

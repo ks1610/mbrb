@@ -24,8 +24,36 @@
       </div>
     </div>
   </div>
-  <div class="chat-input-area">
-    <input type="text" id="userInput" placeholder="Nhập tin nhắn của bạn..." autocomplete="off">
+  <div class="chat-input-area" id = "chatInputArea">
+    <div class = "input-wrapper"> 
+      <div class="input-container"> 
+        <input type="text" id="userInput" placeholder="Nhập tin nhắn của bạn..." autocomplete="off">
+        <div class="dropdown-container">
+          <button class="dropdown-trigger" id="dropdownTrigger" type="button">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 5v14M5 12h14"/>
+            </svg>
+          </button>
+          <div class="dropdown-menu" id="dropdownMenu">
+            <div class="dropdown-item" onclick="showRoutineBox()">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 5v14M5 12h14"/>
+              </svg>
+              Create Routine
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="routine-box" id="routineBox">
+        <span>Create Routine</span>
+        <button class="close-routine" onclick="hideRoutineBox()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+    </div>
     <button onclick="sendMessage()" id="sendButton">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
@@ -93,7 +121,15 @@
       input.value = '';
       input.style.height = 'auto';
 
-      // 2. Hiện typing indicator
+      // Kiểm tra nếu ở chế độ routine
+      let finalMessage = text;
+      const routineBox = document.getElementById('routineBox');
+      if (routineBox.classList.contains('show')) {
+          finalMessage = "ROUTINE_CREATE: " + text;
+          hideRoutineBox(); // Ẩn đi sau khi gửi
+      }
+      
+        // 2. Hiện typing indicator
       const typingIndicator = createTypingIndicator();
       chatBox.appendChild(typingIndicator);
       scrollToBottom();
@@ -103,7 +139,7 @@
         const res = await fetch('/api/chat', {
           method: 'POST',
           headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({message: text})
+          body: JSON.stringify({message: finalMessage})
         });
         
         if (!res.ok) throw new Error('Network response was not ok');
@@ -115,10 +151,12 @@
         
         // Format response if it contains device control commands
         let reply = data.reply;
-        if (text.toLowerCase().includes('bật') || text.toLowerCase().includes('tắt')) {
-          reply = `✅ ${reply}\n\n<i>Thiết bị đã được cập nhật trên dashboard.</i>`;
+        const isRoutineCmd = finalMessage.startsWith("ROUTINE_CREATE:");
+        if (!isRoutineCmd){
+          if (text.toLowerCase().includes('bật') || text.toLowerCase().includes('tắt')) {
+            reply = `✅ ${reply}\n\n<i>Thiết bị đã được cập nhật trên dashboard.</i>`;
+          }
         }
-        
         addMessage(reply, 'bot');
         
       } catch (e) {
@@ -230,6 +268,54 @@
         })
         .catch(error => console.error("Lỗi khi tải lịch sử chat:", error));
     }
+    // Dropdown toggle
+    const dropdownTrigger = document.getElementById('dropdownTrigger');
+    const dropdownMenu = document.getElementById('dropdownMenu');
+      
+    if (dropdownTrigger) {
+      dropdownTrigger.addEventListener('click', function(e) {
+        e.stopPropagation();
+        dropdownMenu.classList.toggle('show');
+      });
+    
+      // Close dropdown when clicking outside
+      document.addEventListener('click', function(e) {
+        if (!dropdownTrigger.contains(e.target) && !dropdownMenu.contains(e.target)) {
+          dropdownMenu.classList.remove('show');
+        }
+      });
+    }
+    
+    function showRoutineBox() {
+      const routineBox = document.getElementById('routineBox');
+      const userInput = document.getElementById('userInput');
+      
+      // Hide dropdown
+      dropdownMenu.classList.remove('show');
+      // userInput.style.display = 'none';
+      routineBox.classList.add('show');
+    }
+    
+    function hideRoutineBox() {
+      const routineBox = document.getElementById('routineBox');
+      const userInput = document.getElementById('userInput');
+      
+      // Hide routine box and show regular input
+      routineBox.classList.remove('show');
+      userInput.style.display = 'block';
+      userInput.focus();
+    }
+    
+    // Optional: Handle routine creation
+    document.addEventListener('DOMContentLoaded', function() {
+      const routineBox = document.getElementById('routineBox');
+      if (routineBox) {
+        routineBox.addEventListener('click', function(e) {
+          // Prevent click from closing when clicking on the box itself (except the close button)
+          e.stopPropagation();
+        });
+      }
+    });
   </script>
 </body>
 </html>
