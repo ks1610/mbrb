@@ -4,4 +4,6 @@ system_config.json
 system_logs.json
 haarcascade_frontalface_default.xml
 chat_history.json
+routines.json
+backup/
 *.mp3
