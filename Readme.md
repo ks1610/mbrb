@@ -74,6 +74,7 @@ Image source: https://randomnerdtutorials.com/raspberry-pi-pinout-gpios/
 * Week5 (start: 2/2/2026): Updated system start automantically when rasperrypi turned on and remember system log for control page
 * Week6 (start: 2/8/2026): Updated feature car remote over bluetooth protocol
 * Week7 (start: 2/15/2026): Integrated face recognition with OpenCV and temporary switched back AI model from qwen2.5 to Gemini 2.5 Flash
+* Week8 (start: 2/22/2028): Updated Routine feature to automate devices
 
-## About to update:
-* Face recognition and Robot interaction
+## Plan to update:
+* Add moving for camera with 2 servos 
