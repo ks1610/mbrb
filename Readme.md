@@ -78,4 +78,4 @@ Image source: https://randomnerdtutorials.com/raspberry-pi-pinout-gpios/
 * Week9 (start: 3/2/2026): Created Android app
 
 ## Plan to update:
-* Add moving for camera with 2 servos and create Android mobile app  
+* Add moving for camera with 2 servos
