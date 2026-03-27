@@ -19,7 +19,7 @@
   <div class="chat-container" id="chatBox">
     <div class="message bot welcome-message" data-time="Vừa xong">
       <div class="bubble">
-        <strong>Chào anh!</strong> 👋<br><br>
+        <strong>Xin Chào!</strong> 👋<br><br>
         Tôi là Hanah - trợ lý ảo hệ thống IoT
       </div>
     </div>
@@ -41,6 +41,18 @@
               </svg>
               Create Routine
             </div>
+            <div class="dropdown-item" onclick="showRoutineBox()">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 5v14M5 12h14"/>
+              </svg>
+              Bug Submit
+            </div>
+            <div class="dropdown-item" onclick="showRoutineBox()">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 5v14M5 12h14"/>
+              </svg>
+              Feature Request
+            </div>
           </div>
         </div>
       </div>
@@ -53,6 +65,7 @@
           </svg>
         </button>
       </div>
+    </div>
     </div>
     <button onclick="sendMessage()" id="sendButton">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">

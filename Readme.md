@@ -2,7 +2,7 @@
 
 ## Describe:
 Get inspired by a Vietnamese television series, i will create a project of mobile robot that can comunicate like an AI and control devices in your house 
-![project demo](imgsrc/hanal.png)
+![project demo](static/imgsrc/hanal.png)
 ## Components:
 * Raspberrypi 4
 * Max9835A Speaker Module
@@ -13,7 +13,7 @@ Get inspired by a Vietnamese television series, i will create a project of mobil
 * LM2596 buck module dc-dc
 * XL4015 buck module dc-dc
 
-![raspberrypi pinout](imgsrc/image.png)
+![raspberrypi pinout](static/imgsrc/image.png)
 Image source: https://randomnerdtutorials.com/raspberry-pi-pinout-gpios/
 
 ## Connection:
@@ -74,7 +74,8 @@ Image source: https://randomnerdtutorials.com/raspberry-pi-pinout-gpios/
 * Week5 (start: 2/2/2026): Updated system start automantically when rasperrypi turned on and remember system log for control page
 * Week6 (start: 2/8/2026): Updated feature car remote over bluetooth protocol
 * Week7 (start: 2/15/2026): Integrated face recognition with OpenCV and temporary switched back AI model from qwen2.5 to Gemini 2.5 Flash
-* Week8 (start: 2/22/2028): Updated Routine feature to automate devices
+* Week8 (start: 2/22/2026): Updated Routine feature to automate devices
+* Week9 (start: 3/2/2026): Created Android app
 
 ## Plan to update:
 * Add moving for camera with 2 servos and create Android mobile app  

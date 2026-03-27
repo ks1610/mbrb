@@ -17,6 +17,7 @@
   
   <!-- Main Content -->
   <div class="main-content" id="mainContent">
+    <div class = "mobile-detail"></div>
     <header class="top-header">
       <div class="header-left">
         <button class="sidebar-toggle" id="sidebarToggle">
@@ -31,7 +32,9 @@
       </div>
       <div class="header-right">
         <div class="user-profile">
-          <div class="user-avatar">H</div>
+          <div>
+            <img class="user-avatar" src="{{ url_for('static', filename='imgsrc/hanal.png') }}" alt="User Avatar">
+          </div>
           <div class="user-info">
             <span class="user-name">Hanah Admin</span>
             <span class="user-role">Administrator</span>

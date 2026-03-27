@@ -38,7 +38,7 @@ app.secret_key = "hanah_robot_key"
 log = logging.getLogger('werkzeug')
 log.setLevel(logging.ERROR)
 
-WEB_PASSWORD = os.getenv('WEB_PASSWORD', '1')
+WEB_PASSWORD = os.getenv('WEB_PASSWORD')
 
 # ==========================================
 # FLASK ROUTES
