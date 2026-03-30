@@ -35,19 +35,19 @@
             </svg>
           </button>
           <div class="dropdown-menu" id="dropdownMenu">
-            <div class="dropdown-item" onclick="showRoutineBox()">
+            <div class="dropdown-item" onclick="showRequestBox('Create Routine')">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M12 5v14M5 12h14"/>
               </svg>
               Create Routine
             </div>
-            <div class="dropdown-item" onclick="showRoutineBox()">
+            <div class="dropdown-item" onclick="showRequestBox('Bug Submit')">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M12 5v14M5 12h14"/>
               </svg>
               Bug Submit
             </div>
-            <div class="dropdown-item" onclick="showRoutineBox()">
+            <div class="dropdown-item" onclick="showRequestBox('Feature Request')">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M12 5v14M5 12h14"/>
               </svg>
@@ -57,7 +57,7 @@
         </div>
       </div>
       <div class="routine-box" id="routineBox">
-        <span>Create Routine</span>
+        <span id="routineTitle">Create Routine</span>
         <button class="close-routine" onclick="hideRoutineBox()">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -79,7 +79,16 @@
     const input = document.getElementById('userInput');
     const chatBox = document.getElementById('chatBox');
     const sendButton = document.getElementById('sendButton');
+    
+    function showRequestBox(type) {
+        currentRequestType = type;
+        const routineBox = document.getElementById('routineBox');
+        const routineTitle = document.getElementById('routineTitle');
 
+        routineTitle.innerText = type; // Cập nhật tiêu đề hiển thị
+        dropdownMenu.classList.remove('show');
+        routineBox.classList.add('show');
+    }
     // Focus input on load
     window.addEventListener('load', () => {
       input.focus();
@@ -134,25 +143,36 @@
       input.value = '';
       input.style.height = 'auto';
 
-      // Kiểm tra nếu ở chế độ routine
-      let finalMessage = text;
       const routineBox = document.getElementById('routineBox');
+      let endpoint = '/api/chat';
+      let payload = { message: text };
+
+      // KIỂM TRA NẾU LÀ BUG HOẶC FEATURE
       if (routineBox.classList.contains('show')) {
-          finalMessage = "ROUTINE_CREATE: " + text;
-          hideRoutineBox(); // Ẩn đi sau khi gửi
+          if (currentRequestType === 'Bug Submit' || currentRequestType === 'Feature Request') {
+              endpoint = '/api/submit-report'; // Sử dụng endpoint mới
+              payload = {
+                  type: currentRequestType,
+                  content: text
+              };
+          } else {
+              // Logic cho Routine
+              payload.message = "ROUTINE_CREATE: " + text;
+          }
+          hideRoutineBox();
       }
-      
-        // 2. Hiện typing indicator
+
+      // 2. Hiện typing indicator
       const typingIndicator = createTypingIndicator();
       chatBox.appendChild(typingIndicator);
       scrollToBottom();
 
       try {
         // 3. Gửi lên Server
-        const res = await fetch('/api/chat', {
+        const res = await fetch(endpoint, {
           method: 'POST',
           headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({message: finalMessage})
+          body: JSON.stringify(payload) // Thay thế finalMessage bằng biến payload
         });
         
         if (!res.ok) throw new Error('Network response was not ok');
@@ -162,25 +182,26 @@
         // 4. Xóa typing indicator và hiện câu trả lời
         typingIndicator.remove();
         
-        // Format response if it contains device control commands
         let reply = data.reply;
-        const isRoutineCmd = finalMessage.startsWith("ROUTINE_CREATE:");
-        if (!isRoutineCmd){
+        
+        // Kiểm tra xem đây có phải lệnh tạo Routine không
+        const isRoutineCmd = payload.message && payload.message.startsWith("ROUTINE_CREATE:");
+        
+        // Format response nếu là lệnh bật/tắt thiết bị thông thường
+        if (!isRoutineCmd && endpoint === '/api/chat') {
           if (text.toLowerCase().includes('bật') || text.toLowerCase().includes('tắt')) {
             reply = `✅ ${reply}\n\n<i>Thiết bị đã được cập nhật trên dashboard.</i>`;
           }
         }
+        
         addMessage(reply, 'bot');
         
       } catch (e) {
         console.error('Error:', e);
         typingIndicator.remove();
         addMessage("❌ Lỗi kết nối. Vui lòng thử lại sau hoặc kiểm tra kết nối mạng.", 'bot');
-        
-        // Show error notification
         showNotification('Lỗi kết nối', 'Không thể kết nối đến máy chủ. Vui lòng thử lại.');
       } finally {
-        // Re-enable input and button
         sendButton.disabled = false;
         input.disabled = false;
         input.focus();

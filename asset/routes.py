@@ -18,6 +18,8 @@ from ai_module import analyze_command_similarity, LOCAL_MODEL, SYS_INSTRUCT_BASE
 import globals
 from globals import BASE_DIR, CONFIG_FILE, LOG_FILE, file_lock, STOP_EVENT
 from routine_manager import parse_and_save_routine, get_all_routines, delete_routine
+import json
+from datetime import timedelta, datetime
 
 try:
     from ai_module import _play_wav_blocking
@@ -432,3 +434,52 @@ def play_remote_audio():
     
     threading.Thread(target=play_task, daemon=True).start()
     return jsonify({"status": "playing"})
+
+REPORT_FILE = os.path.join(BASE_DIR, "reports.json")
+
+@app.route('/api/submit-report', methods=['POST'])
+def api_submit_report():
+    if not session.get('logged_in'):
+        return jsonify({"error": "Unauthorized"}), 401
+    
+    try:
+        data = request.json
+        report_type = data.get("type")
+        content = data.get("content")
+        
+        if not content:
+            return jsonify({"reply": "Nội dung không được để trống."}), 400
+
+        # Tạo object report
+        new_report = {
+            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "type": report_type,
+            "content": content,
+            "user": "admin" # Hoặc lấy từ session nếu có
+        }
+
+        # Lưu vào file JSON
+        reports = []
+        if os.path.exists(REPORT_FILE):
+            with open(REPORT_FILE, "r", encoding="utf-8") as f:
+                try:
+                    reports = json.load(f)
+                except:
+                    reports = []
+        
+        reports.append(new_report)
+        
+        with open(REPORT_FILE, "w", encoding="utf-8") as f:
+            json.dump(reports, f, ensure_ascii=False, indent=4)
+
+        # Ghi log hệ thống
+        add_system_log(f"Người dùng gửi {report_type}", "info", "REPORT")
+
+        return jsonify({
+            "status": "success",
+            "reply": f"Cảm ơn bạn! {report_type} của bạn đã được gửi đến quản trị viên."
+        })
+
+    except Exception as e:
+        print(f"Report Error: {e}")
+        return jsonify({"reply": "Lỗi khi lưu yêu cầu."}), 500

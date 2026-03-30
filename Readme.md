@@ -76,6 +76,7 @@ Image source: https://randomnerdtutorials.com/raspberry-pi-pinout-gpios/
 * Week7 (start: 2/15/2026): Integrated face recognition with OpenCV and temporary switched back AI model from qwen2.5 to Gemini 2.5 Flash
 * Week8 (start: 2/22/2026): Updated Routine feature to automate devices
 * Week9 (start: 3/2/2026): Created Android app
+* Week10 (start: 3/23/2026): Implemented Bug submit and Feature request on chat page
 
 ## Plan to update:
 * Add moving for camera with 2 servos
